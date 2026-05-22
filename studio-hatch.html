@@ -50,7 +50,14 @@ const G="#06B6D4",GL="#67E8F9",GD="#0E7490",ON="#0A0B10",ON2="#13151C",ON3="#1B1
 // --- Supabase ---
 const SUPABASE_URL="https://qchvgklnydqizjoosfpd.supabase.co";
 const SUPABASE_KEY="sb_publishable_Et4lHFmkn_bMUylPFAagXA_UtAmFVoo";
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+  auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:false,
+    lock:async(_name,_acquireTimeout,fn)=>await fn()
+  }
+});
 const TYPE_TO_KEY={exhibition:"exhibitions",event:"events",workshop:"workshops",product:"products",audio:"audio"};
 const KEY_TO_TYPE={exhibitions:"exhibition",events:"event",workshops:"workshop",products:"product",audio:"audio"};
 const EMPTY_CONTENT={exhibitions:[],events:[],workshops:[],products:[],audio:[],about:""};
