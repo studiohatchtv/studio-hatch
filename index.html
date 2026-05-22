@@ -69,6 +69,11 @@ async function fetchContent(){
   grouped.about=st?.value||"";
   return grouped;
 }
+async function fetchNotifications(){
+  const {data,error}=await db.from("notifications").select("*").order("created_at",{ascending:false});
+  if(error){console.error("notifications",error);return [];}
+  return data||[];
+}
 // upload a File/Blob to the 'media' bucket, return public URL
 async function uploadMedia(fileOrBlob,prefix,ext){
   const path=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -285,8 +290,42 @@ function Gate({children}){
   );
 }
 
+function NotifPanel({onClose}){
+  const {lang}=useLang();const {notifs,markNotifSeen}=useContent();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  useEffect(()=>{markNotifSeen();},[]);
+  const fmtWhen=iso=>{
+    const d=new Date(iso),now=new Date();const diff=(now-d)/1000;
+    if(diff<60)return L("az önce","just now");
+    if(diff<3600)return Math.floor(diff/60)+" "+L("dk önce","min ago");
+    if(diff<86400)return Math.floor(diff/3600)+" "+L("saat önce","h ago");
+    return fmtD(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`,lang).full;
+  };
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal-sheet" onClick={e=>e.stopPropagation()} style={{maxHeight:"80vh",overflowY:"auto"}}>
+        <div style={{width:36,height:3,background:"#33363F",borderRadius:2,margin:"0 auto 18px"}}/>
+        <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,marginBottom:16}}>{L("Bildirimler","Notifications")}</h2>
+        {notifs.length===0&&<p style={{fontSize:13,color:MU,textAlign:"center",padding:"24px 0"}}>{L("Henüz bildirim yok.","No notifications yet.")}</p>}
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {notifs.map(n=>(
+            <div key={n.id} style={{background:ON,border:".5px solid #23252E",borderRadius:10,padding:"13px 15px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:8,marginBottom:n.body?5:0}}>
+                <p style={{fontSize:14,fontWeight:500,color:WH}}>{n.title}</p>
+                <span style={{fontSize:10,color:MU,whiteSpace:"nowrap"}}>{fmtWhen(n.created_at)}</span>
+              </div>
+              {n.body&&<p style={{fontSize:12,color:"#9CA0AD",lineHeight:1.5,whiteSpace:"pre-wrap"}}>{n.body}</p>}
+            </div>
+          ))}
+        </div>
+        <button onClick={onClose} style={{width:"100%",marginTop:18,padding:"12px",border:".5px solid #33363F",borderRadius:10,color:MU,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:ON2,cursor:"pointer"}}>{L("Kapat","Close")}</button>
+      </div>
+    </div>
+  );
+}
+
 function HomeScreen({onNav}){
-  const {t,lang}=useLang();const {user}=useAuth();const {content,openDetail}=useContent();const [showAuth,setShowAuth]=useState(false);const [reminded,setReminded]=useState({});
+  const {t,lang}=useLang();const {user}=useAuth();const {content,openDetail,unreadCount}=useContent();const [showAuth,setShowAuth]=useState(false);const [reminded,setReminded]=useState({});const [showNotif,setShowNotif]=useState(false);
   const news=content.exhibitions;
   const upcoming=[...content.events.map(e=>({...e,_t:"events"})),...content.workshops.map(w=>({...w,_t:"workshops"}))].sort((a,b)=>a.date<b.date?-1:1);
   return(
@@ -297,9 +336,15 @@ function HomeScreen({onNav}){
             <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500,marginBottom:8}}>{t.gr()}</p>
             <Logo size={44}/>
           </div>
-          <button onClick={()=>!user&&setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:`${GD}33`,border:`1px solid ${GD}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"none",border:`1px solid ${GD}`}}>
-            <span style={{fontSize:11,fontWeight:600,color:G}}>{user?user.name.slice(0,2).toUpperCase():"?"}</span>
-          </button>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <button onClick={()=>setShowNotif(true)} style={{position:"relative",width:36,height:36,borderRadius:"50%",border:`1px solid ${GD}`,background:"none",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              {unreadCount>0&&<span style={{position:"absolute",top:-2,right:-2,minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"#E0506A",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",border:`1.5px solid ${ON}`}}>{unreadCount>9?"9+":unreadCount}</span>}
+            </button>
+            <button onClick={()=>!user&&setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"none",border:`1px solid ${GD}`}}>
+              <span style={{fontSize:11,fontWeight:600,color:G}}>{user?user.name.slice(0,2).toUpperCase():"?"}</span>
+            </button>
+          </div>
         </div>
         <div style={{marginTop:14}}>
           <span className="pill pill-gold"><span className="dot" style={{width:5,height:5}}/>Frida Kahlo — {t.nowOpen}</span>
@@ -416,6 +461,7 @@ function HomeScreen({onNav}){
         </div>
       </div>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
+      {showNotif&&<NotifPanel onClose={()=>setShowNotif(false)}/>}
     </div>
   );
 }
@@ -938,6 +984,44 @@ function ContentAdmin(){
   );
 }
 
+function NotifAdmin(){
+  const {lang}=useLang();const {notifs,addNotif,deleteNotif}=useContent();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  const [title,setTitle]=useState("");const [body,setBody]=useState("");
+  const [msg,setMsg]=useState("");const [busy,setBusy]=useState(false);
+  const lbl={fontSize:10,color:MU,letterSpacing:".06em",textTransform:"uppercase",marginBottom:6,display:"block"};
+  const send=async()=>{
+    if(!title.trim()){setMsg(L("Başlık gir.","Enter a title."));return;}
+    setBusy(true);setMsg(L("Gönderiliyor…","Sending…"));
+    try{await addNotif(title.trim(),body.trim());setTitle("");setBody("");setMsg(L("✓ Duyuru gönderildi","✓ Notification sent"));setTimeout(()=>setMsg(""),2500);}
+    catch(e){setMsg(L("Gönderilemedi: ","Failed: ")+(e.message||""));}
+    finally{setBusy(false);}
+  };
+  const remove=async n=>{if(!window.confirm(L("Bu duyuruyu sil?","Delete this notification?")))return;try{await deleteNotif(n.id);}catch(e){}};
+  return(
+    <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
+      <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
+        <div><label style={lbl}>{L("Başlık","Title")}</label><input className="inp" value={title} onChange={e=>setTitle(e.target.value)} placeholder={L("örn. Yeni sergi açıldı","e.g. New exhibition is live")}/></div>
+        <div><label style={lbl}>{L("Mesaj","Message")}</label><textarea className="inp" rows={3} value={body} onChange={e=>setBody(e.target.value)} style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}/></div>
+        <button onClick={send} disabled={busy} style={{background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:busy?.6:1}}>{busy?L("Gönderiliyor…","Sending…"):L("Duyuru Gönder","Send Notification")}</button>
+      </div>
+      {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#8BB87A":"#E07070",textAlign:"center"}}>{msg}</p>}
+      {notifs.length>0&&<div className="card" style={{padding:"6px 0"}}>
+        <p style={{...lbl,padding:"8px 16px 4px"}}>{L("Gönderilmiş duyurular","Sent")} ({notifs.length})</p>
+        {notifs.map(n=>(
+          <div key={n.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderTop:".5px solid #1A1B22"}}>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontSize:13,color:WH,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.title}</p>
+              {n.body&&<p style={{fontSize:11,color:MU,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.body}</p>}
+            </div>
+            <button onClick={()=>remove(n)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
+          </div>
+        ))}
+      </div>}
+    </div>
+  );
+}
+
 function AdminPanel(){
   const {t,lang}=useLang();const {content}=useContent();const [tab,setTab]=useState("stats");
   const [users,setUsers]=useState([]);
@@ -959,8 +1043,8 @@ function AdminPanel(){
         <Logo size={32}/>
       </div>
       <div style={{display:"flex",padding:"14px 20px",gap:6}}>
-        {["stats","users","events","content"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
-          {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="events"?t.adminEvents:(lang==="tr"?"İçerik Ekle":"Add Content")}
+        {["stats","users","events","content","notif"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
+          {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="events"?t.adminEvents:tb==="content"?(lang==="tr"?"İçerik Ekle":"Add Content"):(lang==="tr"?"Duyuru":"Notify")}
         </button>)}
       </div>
       {tab==="stats"&&<div style={{padding:"0 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -994,6 +1078,7 @@ function AdminPanel(){
         ))}
       </div>}
       {tab==="content"&&<ContentAdmin/>}
+      {tab==="notif"&&<NotifAdmin/>}
     </div>
   );
 }
@@ -1120,9 +1205,24 @@ function App(){
   const [content,setContent]=useState(EMPTY_CONTENT);
   const [detail,setDetail]=useState(null);
   const [recovery,setRecovery]=useState(false);
+  const [notifs,setNotifs]=useState([]);
+  const [notifSeen,setNotifSeen]=useState(()=>{try{return localStorage.getItem("hatch_notif_seen")||"";}catch(e){return "";}});
   const t=T[lang];
   const reload=async()=>{try{setContent(await fetchContent());}catch(e){console.error(e);}};
-  useEffect(()=>{reload();},[]);
+  const reloadNotifs=async()=>{setNotifs(await fetchNotifications());};
+  useEffect(()=>{reload();reloadNotifs();},[]);
+  const addNotif=async(title,body)=>{
+    const {error}=await db.from("notifications").insert({title,body});
+    if(error){console.error(error);throw error;}
+    await reloadNotifs();
+  };
+  const deleteNotif=async(id)=>{
+    const {error}=await db.from("notifications").delete().eq("id",id);
+    if(error){console.error(error);throw error;}
+    await reloadNotifs();
+  };
+  const markNotifSeen=()=>{const now=new Date().toISOString();try{localStorage.setItem("hatch_notif_seen",now);}catch(e){}setNotifSeen(now);};
+  const unreadCount=notifs.filter(n=>!notifSeen||n.created_at>notifSeen).length;
   useEffect(()=>{
     const apply=async(session)=>{
       if(!session){setUser(null);return;}
@@ -1161,7 +1261,7 @@ function App(){
   return(
     <LC.Provider value={{lang,t,setLang}}>
       <AC.Provider value={{user,setUser}}>
-      <CC.Provider value={{content,addItem,updateItem,deleteItem,updateAbout,openDetail}}>
+      <CC.Provider value={{content,addItem,updateItem,deleteItem,updateAbout,openDetail,notifs,addNotif,deleteNotif,unreadCount,markNotifSeen}}>
         <div className="app">
           <div className="screens">
             {tab==="home"&&<HomeScreen onNav={setTab}/>}
