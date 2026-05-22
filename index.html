@@ -54,7 +54,7 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
   auth:{
     persistSession:true,
     autoRefreshToken:true,
-    detectSessionInUrl:false,
+    detectSessionInUrl:true,
     lock:async(_name,_acquireTimeout,fn)=>await fn()
   }
 });
@@ -195,8 +195,11 @@ function AuthModal({onClose}){
       setErr(L("Hata: ","Error: ")+(e.message||""));
     }finally{setBusy(false);}
   };
-  const socialIn=(provider)=>{
-    setErr(L("Google/Apple girişi yakında — şimdilik e-posta ile devam et.","Google/Apple sign-in coming soon — please use email for now."));
+  const socialIn=async(provider)=>{
+    if(provider==="apple"){setErr(L("Apple girişi yakında — şimdilik Google veya e-posta ile devam et.","Apple sign-in coming soon — use Google or email for now."));return;}
+    setErr("");setBusy(true);
+    const {error}=await db.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+window.location.pathname}});
+    if(error){setErr(L("Hata: ","Error: ")+(error.message||""));setBusy(false);}
   };
   const socialBtn={width:"100%",padding:"12px 14px",borderRadius:10,fontSize:13,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10};
   return(
