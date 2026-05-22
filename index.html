@@ -745,14 +745,22 @@ function ProfileScreen(){
 }
 
 function ContentAdmin(){
-  const {lang}=useLang();const {addItem,content,updateAbout}=useContent();
+  const {lang}=useLang();const {addItem,updateItem,deleteItem,content,updateAbout}=useContent();
   const L=(tr,en)=>lang==="tr"?tr:en;
   const [ctype,setCtype]=useState("events");
   const [form,setForm]=useState({});
+  const [editId,setEditId]=useState(null);
   const [aboutTxt,setAboutTxt]=useState(content.about);
   const [msg,setMsg]=useState("");
   const [uploading,setUploading]=useState(false);
   useEffect(()=>{setAboutTxt(content.about);},[content.about]);
+  const resetForm=()=>{setForm({});setEditId(null);};
+  const startEdit=it=>{setEditId(it.id);setForm({...it});setMsg("");window.scrollTo&&window.scrollTo(0,0);};
+  const removeItem=async it=>{
+    if(!window.confirm(L("Bu içeriği silmek istediğine emin misin?","Delete this item?")))return;
+    try{await deleteItem(it.id);if(editId===it.id)resetForm();setMsg(L("✓ Silindi","✓ Deleted"));setTimeout(()=>setMsg(""),2500);}
+    catch(e){setMsg(L("Silinemedi: ","Delete failed: ")+(e.message||""));}
+  };
   const types=[
     {id:"events",label:L("Etkinlik","Event")},
     {id:"workshops",label:L("Atölye","Workshop")},
@@ -808,8 +816,9 @@ function ContentAdmin(){
     if(item.chapters)item.chapters=item.chapters.filter(c=>(c.title||"").trim());
     setMsg(L("Kaydediliyor…","Saving…"));
     try{
-      await addItem(ctype,item);
-      setForm({});setMsg(L("✓ Eklendi","✓ Added"));
+      if(editId){await updateItem(editId,item);setMsg(L("✓ Güncellendi","✓ Updated"));}
+      else{await addItem(ctype,item);setMsg(L("✓ Eklendi","✓ Added"));}
+      resetForm();
       setTimeout(()=>setMsg(""),2500);
     }catch(e){
       setMsg(L("Kaydedilemedi: ","Save failed: ")+(e.message||""));
@@ -818,7 +827,7 @@ function ContentAdmin(){
   return(
     <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        {types.map(ty=><button key={ty.id} onClick={()=>{setCtype(ty.id);setForm({});setMsg("");}} style={{padding:"6px 12px",borderRadius:7,fontSize:10,fontWeight:500,fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${ctype===ty.id?GD:"#23252E"}`,color:ctype===ty.id?G:MU,background:ctype===ty.id?`${G}12`:ON2,cursor:"pointer"}}>{ty.label}</button>)}
+        {types.map(ty=><button key={ty.id} onClick={()=>{setCtype(ty.id);resetForm();setMsg("");}} style={{padding:"6px 12px",borderRadius:7,fontSize:10,fontWeight:500,fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${ctype===ty.id?GD:"#23252E"}`,color:ctype===ty.id?G:MU,background:ctype===ty.id?`${G}12`:ON2,cursor:"pointer"}}>{ty.label}</button>)}
       </div>
       {ctype==="about"?(
         <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
@@ -826,8 +835,9 @@ function ContentAdmin(){
           <textarea value={aboutTxt} onChange={e=>setAboutTxt(e.target.value)} rows={6} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6}}/>
           <button onClick={async()=>{setMsg(L("Kaydediliyor…","Saving…"));try{await updateAbout(aboutTxt);setMsg(L("✓ Kaydedildi","✓ Saved"));setTimeout(()=>setMsg(""),2500);}catch(e){setMsg(L("Kaydedilemedi: ","Save failed: ")+(e.message||""));}}} style={goldBtn}>{L("Kaydet","Save")}</button>
         </div>
-      ):(
+      ):(<>
         <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
+          {editId&&<div style={{background:`${G}12`,border:`.5px solid ${GD}`,borderRadius:8,padding:"8px 12px",fontSize:11,color:GL}}>{L("Düzenleme modu — değişiklikleri kaydet veya iptal et.","Editing — save or cancel.")}</div>}
           {fields[ctype].map(([k,label,type,,opts])=>(
             <div key={k}>
               {type!=="bool"&&<label style={lbl}>{label}</label>}
@@ -873,9 +883,25 @@ function ContentAdmin(){
                 :<input type={type==="number"?"number":type==="date"?"date":"text"} value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} className="inp" style={type==="date"?{colorScheme:"dark"}:undefined}/>}
             </div>
           ))}
-          <button onClick={submit} disabled={uploading} style={{...goldBtn,opacity:uploading?.6:1,cursor:uploading?"not-allowed":"pointer"}}>{uploading?L("Yükleniyor…","Uploading…"):L("Ekle","Add")}</button>
+          <div style={{display:"flex",gap:8}}>
+            {editId&&<button onClick={resetForm} style={{...goldBtn,background:"transparent",border:".5px solid #33363F",color:MU}}>{L("İptal","Cancel")}</button>}
+            <button onClick={submit} disabled={uploading} style={{...goldBtn,flex:1,opacity:uploading?.6:1,cursor:uploading?"not-allowed":"pointer"}}>{uploading?L("Yükleniyor…","Uploading…"):(editId?L("Güncelle","Update"):L("Ekle","Add"))}</button>
+          </div>
         </div>
-      )}
+        {content[ctype]&&content[ctype].length>0&&<div className="card" style={{padding:"6px 0"}}>
+          <p style={{...lbl,padding:"8px 16px 4px"}}>{L("Mevcut içerikler","Existing items")} ({content[ctype].length})</p>
+          {content[ctype].map(it=>(
+            <div key={it.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderTop:".5px solid #1A1B22"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <p style={{fontSize:13,color:editId===it.id?GL:WH,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.title||it.name||L("(başlıksız)","(untitled)")}</p>
+                {(it.status||it.date||it.price)&&<p style={{fontSize:10,color:MU,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{[it.status==="live"?L("Yayında","Live"):it.status==="soon"?L("Çok Yakında","Soon"):null,it.date,it.price].filter(Boolean).join(" · ")}</p>}
+              </div>
+              <button onClick={()=>startEdit(it)} style={{padding:"6px 10px",borderRadius:7,border:`.5px solid ${GD}`,background:"transparent",color:G,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Düzenle","Edit")}</button>
+              <button onClick={()=>removeItem(it)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
+            </div>
+          ))}
+        </div>}
+      </>)}
       {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#8BB87A":"#E07070",textAlign:"center"}}>{msg}</p>}
     </div>
   );
@@ -1045,6 +1071,17 @@ function App(){
     if(error){console.error(error);throw error;}
     await reload();
   };
+  const updateItem=async(id,item)=>{
+    const {id:_drop,...data}=item;
+    const {error}=await db.from("content_items").update({data}).eq("id",id);
+    if(error){console.error(error);throw error;}
+    await reload();
+  };
+  const deleteItem=async(id)=>{
+    const {error}=await db.from("content_items").delete().eq("id",id);
+    if(error){console.error(error);throw error;}
+    await reload();
+  };
   const updateAbout=async(txt)=>{
     const {error}=await db.from("settings").upsert({key:"about",value:txt});
     if(error){console.error(error);throw error;}
@@ -1055,7 +1092,7 @@ function App(){
   return(
     <LC.Provider value={{lang,t,setLang}}>
       <AC.Provider value={{user,setUser}}>
-      <CC.Provider value={{content,addItem,updateAbout,openDetail}}>
+      <CC.Provider value={{content,addItem,updateItem,deleteItem,updateAbout,openDetail}}>
         <div className="app">
           <div className="screens">
             {tab==="home"&&<HomeScreen onNav={setTab}/>}
