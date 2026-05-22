@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -45,6 +46,29 @@ body{background:#0A0B10;font-family:'DM Sans',sans-serif}
 <script type="text/babel">
 const {useState,useEffect,useRef,createContext,useContext} = React;
 const G="#06B6D4",GL="#67E8F9",GD="#0E7490",ON="#0A0B10",ON2="#13151C",ON3="#1B1D26",MU="#6E727E",WH="#F4F5F8";
+
+// --- Supabase ---
+const SUPABASE_URL="https://qchvgklnydqizjoosfpd.supabase.co";
+const SUPABASE_KEY="sb_publishable_Et4lHFmkn_bMUylPFAagXA_UtAmFVoo";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const TYPE_TO_KEY={exhibition:"exhibitions",event:"events",workshop:"workshops",product:"products",audio:"audio"};
+const KEY_TO_TYPE={exhibitions:"exhibition",events:"event",workshops:"workshop",products:"product",audio:"audio"};
+const EMPTY_CONTENT={exhibitions:[],events:[],workshops:[],products:[],audio:[],about:""};
+async function fetchContent(){
+  const grouped={exhibitions:[],events:[],workshops:[],products:[],audio:[],about:""};
+  const {data:items}=await db.from("content_items").select("*").order("created_at",{ascending:false});
+  (items||[]).forEach(r=>{const k=TYPE_TO_KEY[r.type];if(k)grouped[k].push({id:r.id,...r.data});});
+  const {data:st}=await db.from("settings").select("value").eq("key","about").maybeSingle();
+  grouped.about=st?.value||"";
+  return grouped;
+}
+// upload a File/Blob to the 'media' bucket, return public URL
+async function uploadMedia(fileOrBlob,prefix,ext){
+  const path=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const {error}=await db.storage.from("media").upload(path,fileOrBlob,{upsert:false,contentType:fileOrBlob.type||undefined});
+  if(error){console.error("upload",error);return null;}
+  return db.storage.from("media").getPublicUrl(path).data.publicUrl;
+}
 
 const T={
   tr:{
@@ -143,17 +167,29 @@ function AuthModal({onClose}){
   const [form,setForm]=useState({name:"",email:"",pass:""});
   const [kvkk,setKvkk]=useState(false);
   const [marketing,setMarketing]=useState(false);
-  const canSubmit=form.email&&form.pass&&(mode==="login"||kvkk);
-  const submit=()=>{
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState("");
+  const canSubmit=form.email&&form.pass&&(mode==="login"||kvkk)&&!busy;
+  const submit=async()=>{
     if(!canSubmit)return;
-    setUser({name:form.name||form.email.split("@")[0],email:form.email,isAdmin:form.email==="admin@studiohatch.com",isGold:true,marketing});
-    onClose();
+    setBusy(true);setErr("");
+    try{
+      if(mode==="login"){
+        const {error}=await db.auth.signInWithPassword({email:form.email.trim(),password:form.pass});
+        if(error)throw error;
+        onClose();
+      }else{
+        const {data,error}=await db.auth.signUp({email:form.email.trim(),password:form.pass,options:{data:{name:form.name||form.email.split("@")[0],marketing}}});
+        if(error)throw error;
+        if(data.session){onClose();}
+        else{setErr(L("Hesabın oluşturuldu. E-postandaki onay bağlantısına tıkla, sonra giriş yap.","Account created. Click the confirmation link in your email, then log in."));setMode("login");}
+      }
+    }catch(e){
+      setErr(L("Hata: ","Error: ")+(e.message||""));
+    }finally{setBusy(false);}
   };
   const socialIn=(provider)=>{
-    if(mode==="register"&&!kvkk)return;
-    const fake={google:{name:"Demo Kullanıcı",email:"demo@gmail.com"},apple:{name:"Demo Kullanıcı",email:"demo@privaterelay.appleid.com"}}[provider];
-    setUser({...fake,isAdmin:false,isGold:true,marketing});
-    onClose();
+    setErr(L("Google/Apple girişi yakında — şimdilik e-posta ile devam et.","Google/Apple sign-in coming soon — please use email for now."));
   };
   const socialBtn={width:"100%",padding:"12px 14px",borderRadius:10,fontSize:13,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10};
   return(
@@ -191,7 +227,8 @@ function AuthModal({onClose}){
             <span style={{fontSize:11,color:"#9CA0AD",lineHeight:1.5}}>{L("Kampanya, etkinlik ve yeni sergi bildirimleri almak istiyorum.","I want to receive notifications about campaigns, events and new exhibitions.")}</span>
           </label>
         </div>}
-        <button onClick={submit} disabled={!canSubmit} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:canSubmit?G:"#23252E",border:"none",color:canSubmit?ON:MU,fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.7}}>{mode==="login"?t.login:t.register}</button>
+        {err&&<p style={{fontSize:12,color:err.startsWith("Hata")||err.startsWith("Error")?"#E07070":"#86EFAC",lineHeight:1.5,marginTop:14,textAlign:"center"}}>{err}</p>}
+        <button onClick={submit} disabled={!canSubmit} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:canSubmit?G:"#23252E",border:"none",color:canSubmit?ON:MU,fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.7}}>{busy?"…":(mode==="login"?t.login:t.register)}</button>
         <p style={{textAlign:"center",marginTop:12,fontSize:12,color:MU}}>
           {mode==="login"?t.noAcc:t.haveAcc}{" "}
           <span onClick={()=>setMode(mode==="login"?"register":"login")} style={{color:GL,cursor:"pointer"}}>{mode==="login"?t.register:t.login}</span>
@@ -674,7 +711,7 @@ function ProfileScreen(){
         {[{l:t.edit},{l:t.bookHist},{l:t.notif},
           {l:lang==="tr"?"Hakkımızda":"About",act:()=>setShowAbout(true)},
           {l:t.lang,extra:<div style={{display:"flex",gap:5}}>{["tr","en"].map(ll=><button key={ll} onClick={()=>setLang(ll)} style={{padding:"3px 9px",borderRadius:5,border:`.5px solid ${lang===ll?GD:"#33363F"}`,color:lang===ll?G:MU,background:lang===ll?`${G}12`:"transparent",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{ll.toUpperCase()}</button>)}</div>},
-          {l:t.signOut,danger:true,act:()=>setUser(null)}
+          {l:t.signOut,danger:true,act:()=>db.auth.signOut()}
         ].map(item=>(
           <div key={item.l} onClick={item.act} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"15px 0",borderBottom:".5px solid #181A22",cursor:item.act?"pointer":"default"}}>
             <span style={{fontSize:13,color:item.danger?"#E07070":WH}}>{item.l}</span>
@@ -704,6 +741,8 @@ function ContentAdmin(){
   const [form,setForm]=useState({});
   const [aboutTxt,setAboutTxt]=useState(content.about);
   const [msg,setMsg]=useState("");
+  const [uploading,setUploading]=useState(false);
+  useEffect(()=>{setAboutTxt(content.about);},[content.about]);
   const types=[
     {id:"events",label:L("Etkinlik","Event")},
     {id:"workshops",label:L("Atölye","Workshop")},
@@ -723,6 +762,7 @@ function ContentAdmin(){
   const goldBtn={background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"};
   const pickImg=file=>{
     if(!file)return;
+    setUploading(true);setMsg("");
     const reader=new FileReader();
     reader.onload=ev=>{
       const im=new Image();
@@ -731,25 +771,39 @@ function ContentAdmin(){
         let w=im.width,h=im.height;
         if(w>max){h=Math.round(h*max/w);w=max;}
         cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);
-        setForm(f=>({...f,img:cv.toDataURL("image/jpeg",0.82)}));
+        cv.toBlob(async blob=>{
+          const url=await uploadMedia(blob,"images","jpg");
+          setUploading(false);
+          if(url)setForm(f=>({...f,img:url}));
+          else setMsg(L("Görsel yüklenemedi (admin girişi gerekli).","Image upload failed (admin login required)."));
+        },"image/jpeg",0.82);
       };
       im.src=ev.target.result;
     };
     reader.readAsDataURL(file);
   };
-  const pickAudio=file=>{
+  const pickAudio=async file=>{
     if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>setForm(f=>({...f,src:ev.target.result,fileName:file.name}));
-    reader.readAsDataURL(file);
+    setUploading(true);setMsg("");
+    const ext=(file.name.split(".").pop()||"mp3").toLowerCase();
+    const url=await uploadMedia(file,"audio",ext);
+    setUploading(false);
+    if(url)setForm(f=>({...f,src:url,fileName:file.name}));
+    else setMsg(L("Ses yüklenemedi (admin girişi gerekli).","Audio upload failed (admin login required)."));
   };
-  const submit=()=>{
+  const submit=async()=>{
     for(const [k,,,req] of fields[ctype]){if(req&&!String(form[k]||"").trim()){setMsg(L("Tüm zorunlu alanları doldurun","Fill all required fields"));return;}}
     const item={...form};
     if(item.spots!==undefined)item.spots=parseInt(item.spots)||0;
     if(item.chapters)item.chapters=item.chapters.filter(c=>(c.title||"").trim());
-    addItem(ctype,item);setForm({});setMsg(L("✓ Eklendi","✓ Added"));
-    setTimeout(()=>setMsg(""),2500);
+    setMsg(L("Kaydediliyor…","Saving…"));
+    try{
+      await addItem(ctype,item);
+      setForm({});setMsg(L("✓ Eklendi","✓ Added"));
+      setTimeout(()=>setMsg(""),2500);
+    }catch(e){
+      setMsg(L("Kaydedilemedi: ","Save failed: ")+(e.message||""));
+    }
   };
   return(
     <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
@@ -760,7 +814,7 @@ function ContentAdmin(){
         <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
           <label style={lbl}>{L("Hakkımızda metni","About text")}</label>
           <textarea value={aboutTxt} onChange={e=>setAboutTxt(e.target.value)} rows={6} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6}}/>
-          <button onClick={()=>{updateAbout(aboutTxt);setMsg(L("✓ Kaydedildi","✓ Saved"));setTimeout(()=>setMsg(""),2500);}} style={goldBtn}>{L("Kaydet","Save")}</button>
+          <button onClick={async()=>{setMsg(L("Kaydediliyor…","Saving…"));try{await updateAbout(aboutTxt);setMsg(L("✓ Kaydedildi","✓ Saved"));setTimeout(()=>setMsg(""),2500);}catch(e){setMsg(L("Kaydedilemedi: ","Save failed: ")+(e.message||""));}}} style={goldBtn}>{L("Kaydet","Save")}</button>
         </div>
       ):(
         <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
@@ -809,7 +863,7 @@ function ContentAdmin(){
                 :<input type={type==="number"?"number":type==="date"?"date":"text"} value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} className="inp" style={type==="date"?{colorScheme:"dark"}:undefined}/>}
             </div>
           ))}
-          <button onClick={submit} style={goldBtn}>{L("Ekle","Add")}</button>
+          <button onClick={submit} disabled={uploading} style={{...goldBtn,opacity:uploading?.6:1,cursor:uploading?"not-allowed":"pointer"}}>{uploading?L("Yükleniyor…","Uploading…"):L("Ekle","Add")}</button>
         </div>
       )}
       {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#8BB87A":"#E07070",textAlign:"center"}}>{msg}</p>}
@@ -818,10 +872,16 @@ function ContentAdmin(){
 }
 
 function AdminPanel(){
-  const {t,lang}=useLang();const [tab,setTab]=useState("stats");
-  const stats=[{l:t.totalM,v:"1.284",ch:"+12%"},{l:t.goldM,v:"347",ch:"+8%"},{l:t.activeEv,v:"6",ch:""},{l:t.revenue,v:"₺94.200",ch:"+23%"}];
-  const users=[{n:"Gül Melis",e:"gulmelis@ex.com",p:"Gold"},{n:"Ayşe Kaya",e:"ayse@ex.com",p:"Gold"},{n:"Mehmet Demir",e:"mehmet@ex.com",p:"Free"},{n:"Selin Yıldız",e:"selin@ex.com",p:"Gold"}];
-  const evs=[{n:"Rehberli Tur",d:"18 May",cap:12,reg:8},{n:"Enkostik Atölye",d:"19 May",cap:15,reg:3},{n:"Sanatçı Söyleşisi",d:"23 May",cap:40,reg:40},{n:"Botanik İllüstrasyon",d:"25 May",cap:8,reg:0}];
+  const {t,lang}=useLang();const {content}=useContent();const [tab,setTab]=useState("stats");
+  const [users,setUsers]=useState([]);
+  useEffect(()=>{db.from("profiles").select("*").order("created_at",{ascending:false}).then(({data})=>setUsers(data||[]));},[]);
+  const stats=[
+    {l:t.totalM,v:String(users.length),ch:""},
+    {l:lang==="tr"?"Sergi":"Exhibitions",v:String(content.exhibitions.length),ch:""},
+    {l:lang==="tr"?"Etkinlik & Atölye":"Events & Workshops",v:String(content.events.length+content.workshops.length),ch:""},
+    {l:lang==="tr"?"Ürün":"Products",v:String(content.products.length),ch:""},
+  ];
+  const evs=[...content.events.map(e=>({n:e.name,d:e.date,_t:"event"})),...content.workshops.map(w=>({n:w.name,d:w.date,_t:"workshop"}))];
   return(
     <div style={{paddingBottom:80,background:ON,minHeight:"100%"}}>
       <div style={{padding:"52px 20px 16px",background:ON2,borderBottom:".5px solid #23252E"}}>
@@ -844,28 +904,27 @@ function AdminPanel(){
         </div>)}
       </div>}
       {tab==="users"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:8}}>
-        <p className="sec-title">{t.recentM}</p>
-        {users.map(u=><div key={u.e} className="card" style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <p className="sec-title">{t.recentM} ({users.length})</p>
+        {users.length===0&&<p style={{fontSize:12,color:MU}}>{lang==="tr"?"Henüz kayıtlı üye yok.":"No members registered yet."}</p>}
+        {users.map(u=>{const nm=u.name||(u.email||"").split("@")[0];return(<div key={u.id} className="card" style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:"50%",background:`${GD}33`,border:`.5px solid ${GD}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <span style={{fontSize:11,color:G}}>{u.n.slice(0,2)}</span>
+              <span style={{fontSize:11,color:G}}>{nm.slice(0,2).toUpperCase()}</span>
             </div>
-            <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{u.n}</p><p style={{fontSize:10,color:MU,marginTop:1}}>{u.e}</p></div>
+            <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{nm}</p><p style={{fontSize:10,color:MU,marginTop:1}}>{u.email}</p></div>
           </div>
-          <span className={u.p==="Gold"?"pill pill-gold":"pill pill-muted"}>{u.p}</span>
-        </div>)}
+          <span className={u.is_admin?"pill pill-gold":"pill pill-muted"}>{u.is_admin?"Admin":(lang==="tr"?"Üye":"Member")}</span>
+        </div>);})}
       </div>}
       {tab==="events"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:8}}>
         <p className="sec-title">{t.manageEv}</p>
-        {evs.map(e=>{const pct=Math.round((e.reg/e.cap)*100);return(
-          <div key={e.n} className="card" style={{padding:"14px 16px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-              <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{e.n}</p><p style={{fontSize:11,color:MU,marginTop:2}}>{e.d}</p></div>
-              <span style={{fontSize:12,color:pct===100?"#E07070":G}}>{e.reg}/{e.cap}</span>
-            </div>
-            <div style={{height:3,background:"#23252E",borderRadius:2}}><div style={{height:"100%",width:`${pct}%`,background:pct===100?"#E07070":G,borderRadius:2}}/></div>
+        {evs.length===0&&<p style={{fontSize:12,color:MU}}>{lang==="tr"?"Henüz etkinlik/atölye yok.":"No events/workshops yet."}</p>}
+        {evs.map((e,i)=>(
+          <div key={i} className="card" style={{padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{e.n}</p><p style={{fontSize:11,color:MU,marginTop:2}}>{fmtD(e.d,lang).full||e.d}</p></div>
+            <span className="pill pill-muted">{e._t==="event"?(lang==="tr"?"Etkinlik":"Event"):(lang==="tr"?"Atölye":"Workshop")}</span>
           </div>
-        );})}
+        ))}
       </div>}
       {tab==="content"&&<ContentAdmin/>}
     </div>
@@ -954,11 +1013,33 @@ function App(){
   const [tab,setTab]=useState("home");
   const [playing,setPlaying]=useState(false);
   const [track,setTrack]=useState(null);
-  const [content,setContent]=useState(INITIAL_CONTENT);
+  const [content,setContent]=useState(EMPTY_CONTENT);
   const [detail,setDetail]=useState(null);
   const t=T[lang];
-  const addItem=(type,item)=>setContent(c=>({...c,[type]:[{id:Date.now(),...item},...c[type]]}));
-  const updateAbout=txt=>setContent(c=>({...c,about:txt}));
+  const reload=async()=>{try{setContent(await fetchContent());}catch(e){console.error(e);}};
+  useEffect(()=>{reload();},[]);
+  useEffect(()=>{
+    const apply=async(session)=>{
+      if(!session){setUser(null);return;}
+      const u=session.user;
+      const {data:prof}=await db.from("profiles").select("*").eq("id",u.id).maybeSingle();
+      setUser({id:u.id,email:u.email,name:prof?.name||(u.email||"").split("@")[0],isAdmin:!!prof?.is_admin,isGold:true});
+    };
+    db.auth.getSession().then(({data})=>apply(data.session));
+    const {data:sub}=db.auth.onAuthStateChange((_e,session)=>apply(session));
+    return ()=>sub.subscription.unsubscribe();
+  },[]);
+  const addItem=async(typeKey,item)=>{
+    const {id,...data}=item;
+    const {error}=await db.from("content_items").insert({type:KEY_TO_TYPE[typeKey],data});
+    if(error){console.error(error);throw error;}
+    await reload();
+  };
+  const updateAbout=async(txt)=>{
+    const {error}=await db.from("settings").upsert({key:"about",value:txt});
+    if(error){console.error(error);throw error;}
+    setContent(c=>({...c,about:txt}));
+  };
   const openDetail=(type,item)=>setDetail({type,item});
   const tabs=[{id:"home",l:t.home},{id:"events",l:t.discover},{id:"audio",l:t.audio},{id:"profile",l:t.profile},...(user?.isAdmin?[{id:"admin",l:t.admin}]:[])];
   return(
