@@ -96,3 +96,17 @@ create policy "media admin update" on storage.objects for update
 drop policy if exists "media admin delete" on storage.objects;
 create policy "media admin delete" on storage.objects for delete
   using (bucket_id = 'media' and public.is_admin());
+
+-- 8) Notifications (in-app announcements)
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text,
+  created_at timestamptz not null default now()
+);
+alter table public.notifications enable row level security;
+drop policy if exists "notif read" on public.notifications;
+create policy "notif read" on public.notifications for select using (true);
+drop policy if exists "notif admin write" on public.notifications;
+create policy "notif admin write" on public.notifications for all
+  using (public.is_admin()) with check (public.is_admin());
