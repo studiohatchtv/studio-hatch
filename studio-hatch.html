@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Studio HATCH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:#0A0B10;font-family:'DM Sans',sans-serif}
+.app{width:100%;max-width:480px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;background:#0A0B10;color:#F4F5F8;position:relative;overflow:hidden}
+@media(max-width:480px){.app{max-width:100%}}
+.screens{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;-webkit-overflow-scrolling:touch}
+.nav{height:60px;flex-shrink:0;background:#13151C;border-top:.5px solid #23252E;display:flex;align-items:center;justify-content:space-around;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;background:none;border:none;cursor:pointer}
+.nav-lbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.pill-gold{background:rgba(79,139,255,.13);border:.5px solid #2E4D8C;color:#A8C5FF}
+.pill-muted{background:rgba(35,37,46,.13);border:.5px solid #33363F;color:#6E727E}
+.card{background:#13151C;border:.5px solid #23252E;border-radius:12px;overflow:hidden}
+.sec-title{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6E727E;font-weight:500;margin-bottom:16px}
+.inp{width:100%;padding:12px 16px;background:#0A0B10;border:.5px solid #33363F;border-radius:10px;color:#F4F5F8;font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.inp:focus{border-color:#2E4D8C}
+.inp::placeholder{color:#6E727E}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:flex-end}
+.modal-sheet{width:100%;max-width:420px;margin:0 auto;background:#1B1D26;border:.5px solid #23252E;border-radius:20px 20px 0 0;padding:24px 24px 48px}
+.range{-webkit-appearance:none;width:100%;height:2px;background:transparent;outline:none}
+.range::-webkit-slider-runnable-track{height:2px;background:#23252E;border-radius:1px}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#4F8BFF;margin-top:-6px;cursor:pointer}
+@keyframes wave{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.wbar{width:3px;border-radius:2px;background:#4F8BFF;animation:wave 1.2s ease-in-out infinite;display:inline-block}
+.dot{width:6px;height:6px;border-radius:50%;background:#4F8BFF;animation:pulse 2s ease infinite;display:inline-block}
+.fade{animation:fadeUp .5s ease forwards}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,createContext,useContext} = React;
+const G="#06B6D4",GL="#67E8F9",GD="#0E7490",ON="#0A0B10",ON2="#13151C",ON3="#1B1D26",MU="#6E727E",WH="#F4F5F8";
+
+const T={
+  tr:{
+    gr:()=>{const h=new Date().getHours();return h<12?"Günaydın":h<18?"İyi günler":"İyi akşamlar"},
+    home:"Ana Sayfa",discover:"Keşfet",audio:"Sesli Rehber",profile:"Profil",
+    whatsNew:"hatch dijital art",upcoming:"Yaklaşan Etkinlikler",
+    workshops:"hatch atölyeler",store:"hatch shop",wsStore:"hatch atölyeler & hatch shop",
+    bookNow:"Bilet Al",add:"Ekle",remind:"Hatırlat",reminded:"✓ Ayarlandı",
+    spots:"yer kaldı",full:"Dolu",
+    audioExp:"Sesli Deneyim",audioTitle:"Sesli Rehber",
+    mainEx:"Ana Sergi",digPav:"hatch immersive",
+    back:"Rehbere Dön",chapters:"Bölümler",artBio:"Sanatçı Biyografisi",
+    hpOn:"Kulaklık Aktif",hpOff:"Standart Mod",
+    memberReq:"Üyelik Gerekli",memberDesc:"Sesli rehberler için üye olun.",
+    loginReg:"Giriş Yap / Üye Ol",login:"Giriş Yap",register:"Üye Ol",
+    email:"E-posta",pass:"Şifre",name:"Ad Soyad",
+    noAcc:"Hesabınız yok mu?",haveAcc:"Zaten üye misiniz?",close:"Kapat",
+    goldPerks:"Gold Üyelik",goldDesc:"Studio HATCH'e özel erişiminiz.",
+    perks:["Ürünlere 48 saat erken erişim","Öncelikli atölye kaydı","Özel küratör etkinlikleri","Tüm alışverişlerde %10 indirim","Aylık Gold bülteni"],
+    since:"Üye",gold:"Gold Üye",renews:"Yenileme",active:"Aktif",
+    edit:"Profili Düzenle",bookHist:"Rezervasyon Geçmişi",notif:"Bildirimler",lang:"Dil",signOut:"Çıkış Yap",
+    admin:"Admin",adminStats:"İstatistikler",adminUsers:"Kullanıcılar",adminEvents:"Etkinlikler",
+    totalM:"Toplam Üye",goldM:"Gold Üye",activeEv:"Aktif Etkinlik",revenue:"Aylık Gelir",
+    recentM:"Son Üyeler",manageEv:"Etkinlik Yönetimi",
+    nowOpen:"Şimdi Açık",featured:"hatch dijital art",guide:"Sesli Rehber",opening:"Açılış",
+    bio:"Bio",wsLabel:"hatch atölyeler",evLabel:"Etkinlikler",
+  },
+  en:{
+    gr:()=>{const h=new Date().getHours();return h<12?"Good Morning":h<18?"Good Afternoon":"Good Evening"},
+    home:"Home",discover:"Discover",audio:"Audio Guide",profile:"Profile",
+    whatsNew:"hatch digital art",upcoming:"Upcoming Events",
+    workshops:"hatch workshops",store:"hatch shop",wsStore:"hatch workshops & hatch shop",
+    bookNow:"Get Ticket",add:"Add",remind:"Remind",reminded:"✓ Set",
+    spots:"spots left",full:"Full",
+    audioExp:"Audio Experience",audioTitle:"Audio Guide",
+    mainEx:"Main Exhibition",digPav:"hatch immersive",
+    back:"Back to Guide",chapters:"Chapters",artBio:"View Artist Bio",
+    hpOn:"Headphones Active",hpOff:"Standard Mode",
+    memberReq:"Membership Required",memberDesc:"Join to access audio guides.",
+    loginReg:"Login / Register",login:"Log In",register:"Register",
+    email:"Email",pass:"Password",name:"Full Name",
+    noAcc:"Don't have an account?",haveAcc:"Already a member?",close:"Close",
+    goldPerks:"Gold Membership",goldDesc:"Your exclusive access to Studio HATCH.",
+    perks:["48hr early access to products","Priority workshop booking","Private curator events","10% off all purchases","Monthly Gold newsletter"],
+    since:"Member since",gold:"Gold Member",renews:"Renews",active:"Active",
+    edit:"Edit Profile",bookHist:"Booking History",notif:"Notifications",lang:"Language",signOut:"Sign Out",
+    admin:"Admin",adminStats:"Stats",adminUsers:"Users",adminEvents:"Events",
+    totalM:"Total Members",goldM:"Gold Members",activeEv:"Active Events",revenue:"Monthly Revenue",
+    recentM:"Recent Members",manageEv:"Manage Events",
+    nowOpen:"Now Open",featured:"hatch digital art",guide:"Audio Guide",opening:"Opening",
+    bio:"Bio",wsLabel:"hatch workshops",evLabel:"Events",
+  }
+};
+
+const LC=createContext({lang:"tr",t:T.tr,setLang:()=>{}});
+const AC=createContext({user:null,setUser:()=>{}});
+const CC=createContext(null);
+const useLang=()=>useContext(LC);
+const useAuth=()=>useContext(AC);
+const useContent=()=>useContext(CC);
+
+const TR_DAYS=["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"];
+const EN_DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const TR_MON=["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const EN_MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const TR_MONF=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const EN_MONF=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function fmtD(iso,lang){
+  const d=new Date(iso+"T00:00:00");
+  if(!iso||isNaN(d.getTime()))return{day:iso||"",dayName:"",mon:"",full:iso||""};
+  const dn=(lang==="tr"?TR_DAYS:EN_DAYS)[d.getDay()];
+  const mn=(lang==="tr"?TR_MON:EN_MON)[d.getMonth()];
+  return{day:d.getDate(),dayName:dn,mon:mn,full:`${dn}, ${d.getDate()} ${mn}`};
+}
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;};
+
+const LOGO_SRC="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAAAXNSR0IArs4c6QAAAHhlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAAEsAAAAAQAAASwAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAAgCgAwAEAAAAAQAAAgAAAAAAXpTxmQAAAAlwSFlzAAAuIwAALiMBeKU/dgAAKldJREFUeAHt3Qu4PGV9H3Auyk0QFFGgEi7hIqiIgpeIUkERK6agFqXWW4hpNI800cQ8eRobU+uTpsbQRGNMYmKqkSatsUSNGq0pGINRNN5QNHjhjyJ3EFAREEm/vz8zuhzOXs7ZmT27ez7v8/z+Mzsz+3vf+cz+d959Z87uNtsoBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQ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0/EuieoUfCvx1UR5VEehhprnqTwgjal2H5M4NLFXotzqmNaIxCWJavtHE19JbJayb3a0Okl1XA9M1CWaeq3Xa6mOaY0MfC5RNmWkECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAosnsO3iNVmL50Bgu7Rh5w7a8c/J8b1ETVcr9frcZbUVa1x2R7aveoaVHbPiHsNWbsDy21Ln9yesd97a/oO0+5YRba/XTb1+NrrcngbcOqIRXbWzLMpkWOmqnnp91+tcITCxgA7AxFQ2HBA4OPPvS9xzYNl6Zr+ZJz05cfOQJz8wyz+QmLYT8KXkeFpi2Bvxa7PutMS8lA+lIT8zYWN+M9s9e8JtZ7HZx1PJ6SMqenPWPWnE+lmtekcq+uUhlVUH5T2JI4asX8viel19csQT/jLrjh6xfpJV1Zk5OXHxJBvbhkArME+feto2mc6/wA5p4o8npv0kVx2IUTlqfdVTn3KnKd8d8+QHZP0BY7aZ5erqrOyeuHGCSu+fbQ6YYLtZbXLZmIr2yfoDxmwzi9V1zEeV/bLygFEbTLhupzHbVSf3gDHbjFtdI2j1f1IhsCaBUW++a0pk400lUG849alj2jIuR1f1DPvk37Z/3Pp2u1lN6+T08Akrm7e2j2vPuPUT7vbUm41rx7j1kzZg2OWt9vld1FP/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k2aGAkYAZoitqrsL6ADc3cSS8QLbZpMubl7aYUxVXY0AjGtrV/8PJs1T3wz36TH7vpbVJ43ZuI5XF6WLPJMaddHeUTnGtaOLfR2Xo16X416bo/ahXTeunnY7UwJ3EVjWT1h32UkPOheon1v9RqJeP3esiLrGPWrZ4PrPZNtRpb4l7YpRG0y47sox29U3EnZRz1q+ufA9qbOrrwWubwW8d+KmxGqljkcX331feaYt1yZBF9bTtqOO+ajShdk4rzr518l72mMzrp5R+2ndJhbQc9zEB3+KXa83rvrVtXrjat8o22kta2PlsqxaU9kxW++8pmesvnF1Or69+qqtS+sb2caNRox4+g9XVYdl0j/xq87TpL9c98MKhszU/+M6+dd+riy1rn5ToQvH+pnd+guG6gCut9Sv8HU1srPeNtTzbkvcPCJBmU37TZT1+v9CoupareyUhUckpn0frv9v9S2Tk772sqlCgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIrCbw/wFUG5XIMD3z/wAAAABJRU5ErkJggg==";
+function Logo({size=40}){
+  return <img src={LOGO_SRC} alt="Studio HATCH" draggable={false} style={{height:size*2.5,width:size*2.5,objectFit:"contain",display:"block",margin:"0 auto",filter:"invert(1)",userSelect:"none"}}/>;
+}
+
+function Icon({id,stroke=MU}){
+  const s={viewBox:"0 0 24 24",fill:"none",strokeWidth:"1.5",strokeLinecap:"round",strokeLinejoin:"round",width:20,height:20,stroke};
+  if(id==="home")return<svg {...s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+  if(id==="events")return<svg {...s}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  if(id==="audio")return<svg {...s}><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>;
+  if(id==="profile")return<svg {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+  if(id==="admin")return<svg {...s}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+  return null;
+}
+
+function AuthModal({onClose}){
+  const {t,lang}=useLang();const {setUser}=useAuth();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  const [mode,setMode]=useState("login");
+  const [form,setForm]=useState({name:"",email:"",pass:""});
+  const [kvkk,setKvkk]=useState(false);
+  const [marketing,setMarketing]=useState(false);
+  const canSubmit=form.email&&form.pass&&(mode==="login"||kvkk);
+  const submit=()=>{
+    if(!canSubmit)return;
+    setUser({name:form.name||form.email.split("@")[0],email:form.email,isAdmin:form.email==="admin@studiohatch.com",isGold:true,marketing});
+    onClose();
+  };
+  const socialIn=(provider)=>{
+    if(mode==="register"&&!kvkk)return;
+    const fake={google:{name:"Demo Kullanıcı",email:"demo@gmail.com"},apple:{name:"Demo Kullanıcı",email:"demo@privaterelay.appleid.com"}}[provider];
+    setUser({...fake,isAdmin:false,isGold:true,marketing});
+    onClose();
+  };
+  const socialBtn={width:"100%",padding:"12px 14px",borderRadius:10,fontSize:13,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10};
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal-sheet" onClick={e=>e.stopPropagation()}>
+        <div style={{width:36,height:3,background:"#33363F",borderRadius:2,margin:"0 auto 20px"}}/>
+        <div style={{textAlign:"center",marginBottom:18}}><Logo size={36}/></div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+          <button onClick={()=>socialIn("google")} style={{...socialBtn,background:"#FFFFFF",color:"#1F1F1F",border:"none"}}>
+            <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+            {L("Google ile devam et","Continue with Google")}
+          </button>
+          <button onClick={()=>socialIn("apple")} style={{...socialBtn,background:"#000000",color:"#FFFFFF",border:"none"}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            {L("Apple ile devam et","Continue with Apple")}
+          </button>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10,margin:"4px 0 14px"}}>
+          <div style={{flex:1,height:1,background:"#23252E"}}/>
+          <span style={{fontSize:10,letterSpacing:".15em",textTransform:"uppercase",color:MU}}>{L("veya","or")}</span>
+          <div style={{flex:1,height:1,background:"#23252E"}}/>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {mode==="register"&&<input className="inp" placeholder={t.name} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>}
+          <input className="inp" placeholder={t.email} type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}/>
+          <input className="inp" placeholder={t.pass} type="password" value={form.pass} onChange={e=>setForm(f=>({...f,pass:e.target.value}))}/>
+        </div>
+        {mode==="register"&&<div style={{display:"flex",flexDirection:"column",gap:9,marginTop:14}}>
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer"}}>
+            <input type="checkbox" checked={kvkk} onChange={e=>setKvkk(e.target.checked)} style={{marginTop:2,accentColor:G,cursor:"pointer"}}/>
+            <span style={{fontSize:11,color:"#9CA0AD",lineHeight:1.5}}>{L("KVKK Aydınlatma Metni'ni okudum, kişisel verilerimin işlenmesini onaylıyorum.","I have read the Privacy Notice and consent to the processing of my personal data.")} <span style={{color:"#E07070"}}>*</span></span>
+          </label>
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer"}}>
+            <input type="checkbox" checked={marketing} onChange={e=>setMarketing(e.target.checked)} style={{marginTop:2,accentColor:G,cursor:"pointer"}}/>
+            <span style={{fontSize:11,color:"#9CA0AD",lineHeight:1.5}}>{L("Kampanya, etkinlik ve yeni sergi bildirimleri almak istiyorum.","I want to receive notifications about campaigns, events and new exhibitions.")}</span>
+          </label>
+        </div>}
+        <button onClick={submit} disabled={!canSubmit} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:canSubmit?G:"#23252E",border:"none",color:canSubmit?ON:MU,fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.7}}>{mode==="login"?t.login:t.register}</button>
+        <p style={{textAlign:"center",marginTop:12,fontSize:12,color:MU}}>
+          {mode==="login"?t.noAcc:t.haveAcc}{" "}
+          <span onClick={()=>setMode(mode==="login"?"register":"login")} style={{color:GL,cursor:"pointer"}}>{mode==="login"?t.register:t.login}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Gate({children}){
+  const {user}=useAuth();const {t}=useLang();const [show,setShow]=useState(false);
+  if(user)return children;
+  return(
+    <>
+      <div style={{background:ON3,border:`1px solid ${GD}44`,borderRadius:16,padding:"28px 20px",textAlign:"center",margin:"0 4px"}}>
+        <div style={{width:52,height:52,borderRadius:"50%",background:`${GD}22`,border:`1px solid ${GD}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:19,color:WH,marginBottom:8,fontStyle:"italic"}}>{t.memberReq}</h3>
+        <p style={{fontSize:13,color:MU,lineHeight:1.6,marginBottom:18}}>{t.memberDesc}</p>
+        <button onClick={()=>setShow(true)} style={{padding:"11px 26px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
+      </div>
+      {show&&<AuthModal onClose={()=>setShow(false)}/>}
+    </>
+  );
+}
+
+function HomeScreen({onNav}){
+  const {t,lang}=useLang();const {user}=useAuth();const {content,openDetail}=useContent();const [showAuth,setShowAuth]=useState(false);const [reminded,setReminded]=useState({});
+  const news=content.exhibitions;
+  const upcoming=[...content.events.map(e=>({...e,_t:"events"})),...content.workshops.map(w=>({...w,_t:"workshops"}))].sort((a,b)=>a.date<b.date?-1:1);
+  return(
+    <div style={{paddingBottom:80}}>
+      <div style={{padding:"52px 20px 20px",background:`linear-gradient(${ON} 60%,transparent)`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500,marginBottom:8}}>{t.gr()}</p>
+            <Logo size={44}/>
+          </div>
+          <button onClick={()=>!user&&setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:`${GD}33`,border:`1px solid ${GD}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"none",border:`1px solid ${GD}`}}>
+            <span style={{fontSize:11,fontWeight:600,color:G}}>{user?user.name.slice(0,2).toUpperCase():"?"}</span>
+          </button>
+        </div>
+        <div style={{marginTop:14}}>
+          <span className="pill pill-gold"><span className="dot" style={{width:5,height:5}}/>Frida Kahlo — {t.nowOpen}</span>
+        </div>
+      </div>
+
+      {(()=>{const banners=[
+        ...content.exhibitions.filter(x=>x.banner).map(x=>({...x,_t:"exhibitions"})),
+        ...content.events.filter(x=>x.banner).map(x=>({...x,_t:"events"})),
+        ...content.workshops.filter(x=>x.banner).map(x=>({...x,_t:"workshops"})),
+      ];if(banners.length===0)return null;return(
+        <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:12}}>
+          {banners.map(b=>{const live=b._t==="exhibitions"&&b.status==="live";const soon=b._t==="exhibitions"&&b.status==="soon";return(
+            <div key={`${b._t}-${b.id}`} onClick={()=>openDetail(b._t,b)} style={{cursor:"pointer",borderRadius:12,overflow:"hidden",height:210,background:b.img?"#000":"linear-gradient(160deg,#083344 0%,#155E75 40%,#0A0B10 100%)",border:".5px solid #23252E",position:"relative"}}>
+              {b.img&&<img src={b.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+              {!b.img&&<div style={{position:"absolute",inset:0,opacity:.18,backgroundImage:`radial-gradient(ellipse at 30% 40%,${G} 0%,transparent 60%)`}}/>}
+              <div style={{position:"absolute",top:14,left:14,display:"flex",gap:6,flexWrap:"wrap"}}>
+                {live&&<span className="pill" style={{background:"#16A34A22",border:".5px solid #16A34A",color:"#86EFAC"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#22C55E",display:"inline-block",marginRight:2}}/>{lang==="tr"?"Yayında":"Live"}</span>}
+                {soon&&<span className="pill" style={{background:`${G}1A`,border:`.5px solid ${GD}`,color:GL}}>{lang==="tr"?"Çok Yakında":"Coming Soon"}</span>}
+                {b._t==="events"&&<span className="pill" style={{background:`${G}1A`,border:`.5px solid ${GD}`,color:GL}}>{lang==="tr"?"Etkinlik":"Event"}</span>}
+                {b._t==="workshops"&&<span className="pill" style={{background:`${G}1A`,border:`.5px solid ${GD}`,color:GL}}>{lang==="tr"?"Atölye":"Workshop"}</span>}
+              </div>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"18px 16px",background:"linear-gradient(transparent,rgba(0,0,0,.92))"}}>
+                <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2,marginBottom:4}}>{b.title||b.name}</h2>
+                <p style={{fontSize:12,color:"#9CA0AD",lineHeight:1.5}}>{b._t==="exhibitions"?(b.subkind==="immersive"?"studio HATCH Immersive":"studio HATCH Digital Art"):(b.date?`${b.date}${b.time?" · "+b.time:""}`:(b.desc||""))}</p>
+              </div>
+            </div>
+          );})}
+        </div>
+      );})()}
+
+      <div style={{padding:"24px 20px 0"}}>
+        <p className="sec-title">{lang==="tr"?"Sergiler":"Exhibitions"}</p>
+        {[["immersive","studio HATCH Immersive"],["digital_art","studio HATCH Digital Art"]].map(([sk,label])=>{
+          const list=news.filter(a=>a.subkind===sk);
+          if(list.length===0)return null;
+          return(
+            <div key={sk} style={{marginBottom:18}}>
+              <p style={{fontSize:11,letterSpacing:".14em",textTransform:"uppercase",color:GL,fontWeight:500,marginBottom:10}}>{label}</p>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {list.map((a,i)=>{const live=a.status==="live";const soon=a.status==="soon";return(
+                  <div key={a.id} className="card fade" onClick={()=>openDetail("exhibitions",a)} style={{padding:"14px 16px",animationDelay:`${i*.08}s`,cursor:"pointer"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
+                      {live?<span className="pill" style={{background:"#16A34A22",border:".5px solid #16A34A",color:"#86EFAC"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#22C55E",display:"inline-block",marginRight:2}}/>{lang==="tr"?"Yayında":"Live"}</span>
+                      :soon?<span className="pill" style={{background:`${G}14`,border:`.5px solid ${GD}`,color:GL}}>{lang==="tr"?"Çok Yakında":"Coming Soon"}</span>
+                      :<span/>}
+                      {a.date&&<span style={{fontSize:11,color:MU}}>{a.date}</span>}
+                    </div>
+                    <h3 style={{fontSize:15,fontWeight:500,color:WH,marginBottom:5,lineHeight:1.3}}>{a.title}</h3>
+                    <p style={{fontSize:12,color:MU,lineHeight:1.6}}>{a.desc}</p>
+                  </div>
+                );})}
+              </div>
+            </div>
+          );
+        })}
+        {news.filter(a=>!a.subkind).length>0&&<div style={{marginBottom:18}}>
+          <p style={{fontSize:11,letterSpacing:".14em",textTransform:"uppercase",color:MU,fontWeight:500,marginBottom:10}}>{lang==="tr"?"Diğer":"Other"}</p>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {news.filter(a=>!a.subkind).map((a,i)=>(
+              <div key={a.id} className="card fade" onClick={()=>openDetail("exhibitions",a)} style={{padding:"14px 16px",animationDelay:`${i*.08}s`,cursor:"pointer"}}>
+                {a.cat&&<span className="pill" style={{background:`${G}14`,border:`.5px solid ${GD}`,color:GL,marginBottom:7,display:"inline-flex"}}>{a.cat}</span>}
+                <h3 style={{fontSize:15,fontWeight:500,color:WH,marginBottom:5,lineHeight:1.3}}>{a.title}</h3>
+                <p style={{fontSize:12,color:MU,lineHeight:1.6}}>{a.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>}
+      </div>
+
+      <div style={{padding:"24px 20px 0"}}>
+        <p className="sec-title">{t.upcoming}</p>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {upcoming.map(e=>{const k=`${e._t}-${e.id}`;const dd=fmtD(e.date,lang);return(
+            <div key={k} className="card" onClick={()=>openDetail(e._t,e)} style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+              <div style={{textAlign:"center",minWidth:38}}>
+                <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif",lineHeight:1}}>{dd.day}</div>
+                <div style={{fontSize:9,color:MU,marginTop:2,letterSpacing:".05em"}}>{(dd.mon||"").toUpperCase()}</div>
+              </div>
+              <div style={{flex:1}}>
+                <p style={{fontSize:13,fontWeight:500,color:WH,lineHeight:1.3}}>{e.name}</p>
+                <p style={{fontSize:11,color:MU,marginTop:2}}>{e.time} · {e.spots===0?<span style={{color:"#E07070"}}>{t.full}</span>:<span style={{color:"#8BB87A"}}>{e.spots} {t.spots}</span>}</p>
+              </div>
+              <button onClick={ev=>{ev.stopPropagation();setReminded(r=>({...r,[k]:!r[k]}));}} style={{border:`.5px solid ${reminded[k]?GD:"#33363F"}`,borderRadius:7,padding:"6px 11px",fontSize:10,color:reminded[k]?G:MU,fontFamily:"'DM Sans',sans-serif",background:reminded[k]?`${G}14`:"transparent",cursor:"pointer"}}>
+                {reminded[k]?t.reminded:t.remind}
+              </button>
+            </div>
+          );})}
+        </div>
+      </div>
+
+      <div style={{padding:"24px 20px 0"}}>
+        <p className="sec-title">{t.store}</p>
+        <div onClick={()=>onNav("events")} style={{cursor:"pointer",borderRadius:12,overflow:"hidden",height:110,background:"linear-gradient(120deg,#0A1115 0%,#103D48 45%,#0A0B10 100%)",border:".5px solid #23252E",position:"relative",marginBottom:12}}>
+          <div style={{position:"absolute",inset:0,opacity:.14,backgroundImage:`radial-gradient(ellipse at 70% 50%,${G} 0%,transparent 60%)`}}/>
+          <div style={{position:"absolute",inset:0,padding:"0 18px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+            <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:18,fontWeight:500,color:WH,marginBottom:4}}>Sınırlı Sayıda Baskılar & Objeler</h3>
+            <p style={{fontSize:11,color:"#9CA0AD"}}>Tüm koleksiyonu keşfet →</p>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {content.products.slice(0,6).map(p=>(
+            <div key={p.id} className="card" onClick={()=>openDetail("products",p)} style={{cursor:"pointer",overflow:"hidden"}}>
+              <div style={{height:96,background:p.img?"#000":"linear-gradient(150deg,#083344,#155E75 60%,#0A0B10)"}}>
+                {p.img&&<img src={p.img} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+              </div>
+              <div style={{padding:"10px 12px"}}>
+                {p.tag&&<span className="pill pill-gold" style={{display:"inline-flex",marginBottom:6,fontSize:8,padding:"2px 7px"}}>{p.tag}</span>}
+                <p style={{fontSize:12,fontWeight:500,color:WH,lineHeight:1.3}}>{p.name}</p>
+                <p style={{fontSize:12,color:G,fontWeight:600,marginTop:4}}>{p.price}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
+    </div>
+  );
+}
+
+function Calendar({items,openDetail}){
+  const {t,lang}=useLang();
+  const now=new Date();
+  const [vm,setVm]=useState({y:now.getFullYear(),m:now.getMonth()});
+  const [sel,setSel]=useState(null);
+  const tIso=todayISO();
+  const byDate={};
+  items.forEach(it=>{(byDate[it.date]=byDate[it.date]||[]).push(it);});
+  const {y,m}=vm;
+  const pad=n=>String(n).padStart(2,"0");
+  const firstDow=(new Date(y,m,1).getDay()+6)%7;
+  const days=new Date(y,m+1,0).getDate();
+  const cells=[];
+  for(let i=0;i<firstDow;i++)cells.push(null);
+  for(let d=1;d<=days;d++)cells.push(d);
+  const list=sel?(byDate[sel]||[]):items.filter(it=>it.date>=tIso).sort((a,b)=>a.date<b.date?-1:1).slice(0,10);
+  const monName=(lang==="tr"?TR_MONF:EN_MONF)[m];
+  const dows=lang==="tr"?["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"]:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const shift=d=>{let nm=m+d,ny=y;if(nm<0){nm=11;ny--;}if(nm>11){nm=0;ny++;}setVm({y:ny,m:nm});setSel(null);};
+  const navBtn={width:30,height:30,borderRadius:8,background:ON2,border:".5px solid #23252E",color:G,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"};
+  return(
+    <div style={{padding:"0 20px"}}>
+      <div className="card" style={{padding:"14px 14px 12px",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <button onClick={()=>shift(-1)} style={navBtn}>‹</button>
+          <span style={{fontFamily:"'Bodoni Moda',serif",fontSize:15,color:WH}}>{monName} {y}</span>
+          <button onClick={()=>shift(1)} style={navBtn}>›</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:5}}>
+          {dows.map(d=><div key={d} style={{textAlign:"center",fontSize:8,color:MU,letterSpacing:".03em"}}>{d}</div>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+          {cells.map((d,i)=>{
+            if(!d)return<div key={i}/>;
+            const iso=`${y}-${pad(m+1)}-${pad(d)}`;
+            const has=!!byDate[iso],isSel=sel===iso,isToday=iso===tIso;
+            return(
+              <button key={i} onClick={()=>has&&setSel(isSel?null:iso)} style={{aspectRatio:"1",border:isToday?`.5px solid ${GD}`:".5px solid transparent",borderRadius:7,background:isSel?G:has?`${G}1A`:"transparent",color:isSel?ON:has?GL:WH,fontSize:11,fontWeight:has?600:400,fontFamily:"'DM Sans',sans-serif",cursor:has?"pointer":"default",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                {d}
+                {has&&!isSel&&<span style={{width:3,height:3,borderRadius:"50%",background:G,marginTop:2}}/>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <p className="sec-title">{sel?fmtD(sel,lang).full:(lang==="tr"?"En Yakın Etkinlikler":"Upcoming Events")}</p>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {list.length===0&&<p style={{fontSize:12,color:MU,padding:"6px 0"}}>{lang==="tr"?"Bu tarihte etkinlik yok.":"No events on this date."}</p>}
+        {list.map(e=>{const dd=fmtD(e.date,lang);return(
+          <div key={`${e._t}-${e.id}`} className="card" onClick={()=>openDetail(e._t,e)} style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+            <div style={{textAlign:"center",minWidth:38}}>
+              <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif",lineHeight:1}}>{dd.day}</div>
+              <div style={{fontSize:9,color:MU,marginTop:2}}>{(dd.mon||"").toUpperCase()}</div>
+            </div>
+            <div style={{flex:1}}>
+              <p style={{fontSize:13,fontWeight:500,color:WH,lineHeight:1.3}}>{e.name}</p>
+              <p style={{fontSize:11,color:MU,marginTop:2}}>{e.time} · {e._t==="workshops"?(lang==="tr"?"Atölye":"Workshop"):(lang==="tr"?"Etkinlik":"Event")}</p>
+            </div>
+            <span style={{fontSize:10,color:e.spots===0?"#E07070":"#8BB87A"}}>{e.spots===0?t.full:`${e.spots} ${t.spots}`}</span>
+          </div>
+        );})}
+      </div>
+    </div>
+  );
+}
+
+function EventsScreen(){
+  const {t,lang}=useLang();const {content,openDetail}=useContent();const [tab,setTab]=useState("calendar");
+  const ws=content.workshops;
+  const pr=content.products;
+  const dated=[...content.events.map(e=>({...e,_t:"events"})),...content.workshops.map(w=>({...w,_t:"workshops"}))];
+  const tabLabel=tb=>tb==="calendar"?(lang==="tr"?"Etkinlik Takvimi":"Event Calendar"):tb==="workshops"?t.workshops:t.store;
+  const tabShort=tb=>tb==="calendar"?(lang==="tr"?"Takvim":"Calendar"):tb==="workshops"?(lang==="tr"?"Atölyeler":"Workshops"):"Shop";
+  return(
+    <div style={{paddingBottom:80}}>
+      <div style={{padding:"52px 20px 18px"}}>
+        <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500}}>Keşfet</p>
+        <h1 style={{fontFamily:"'Bodoni Moda',serif",fontSize:26,fontWeight:500,color:WH,marginTop:4}}>{tabLabel(tab)}</h1>
+      </div>
+      <div style={{display:"flex",padding:"0 20px",gap:6,marginBottom:20}}>
+        {["calendar","workshops","products"].map(tb=>(
+          <button key={tb} onClick={()=>setTab(tb)} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:10,fontWeight:500,letterSpacing:".05em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer",transition:"all .25s"}}>
+            {tabShort(tb)}
+          </button>
+        ))}
+      </div>
+      {tab==="calendar"&&<Calendar items={dated} openDetail={openDetail}/>}
+      {tab==="workshops"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:10}}>
+        {ws.map((w,i)=>(
+          <div key={w.id} className="card fade" onClick={()=>openDetail("workshops",w)} style={{padding:"16px",animationDelay:`${i*.06}s`,cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+              <div><h3 style={{fontSize:15,fontWeight:500,color:WH,lineHeight:1.3}}>{w.name}</h3><p style={{fontSize:11,color:MU,marginTop:2}}>{fmtD(w.date,lang).full} · {w.time}</p></div>
+              <div style={{textAlign:"right"}}><div style={{fontSize:15,fontWeight:600,color:G}}>{w.price}</div><div style={{fontSize:10,color:MU,marginTop:2}}>{w.spots} {t.spots}</div></div>
+            </div>
+            <p style={{fontSize:12,color:MU,lineHeight:1.6,marginBottom:10}}>{w.desc}</p>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span className="pill pill-muted">{w.level}</span>
+              <button onClick={ev=>{ev.stopPropagation();if(w.ticketUrl)window.open(w.ticketUrl,"_blank");}} style={{background:`${G}18`,border:`.5px solid ${GD}`,color:G,padding:"7px 16px",borderRadius:7,fontSize:11,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.bookNow}</button>
+            </div>
+          </div>
+        ))}
+      </div>}
+      {tab==="products"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:8}}>
+        {pr.map((p,i)=>(
+          <div key={p.id} className="card fade" onClick={()=>openDetail("products",p)} style={{padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",animationDelay:`${i*.06}s`,cursor:"pointer"}}>
+            <div style={{flex:1}}>
+              {p.tag&&<span className="pill pill-gold" style={{marginBottom:7,display:"inline-flex"}}>{p.tag}</span>}
+              <h3 style={{fontSize:14,fontWeight:500,color:WH}}>{p.name}</h3>
+              <p style={{fontSize:11,color:MU,marginTop:3}}>{p.sub}</p>
+            </div>
+            <div style={{textAlign:"right",marginLeft:14}}>
+              <div style={{fontSize:14,fontWeight:600,color:G}}>{p.price}</div>
+              <button onClick={ev=>ev.stopPropagation()} style={{marginTop:7,background:"transparent",border:".5px solid #33363F",color:MU,padding:"5px 12px",borderRadius:7,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.add}</button>
+            </div>
+          </div>
+        ))}
+      </div>}
+    </div>
+  );
+}
+
+function AudioScreen({playing,setPlaying,track,setTrack}){
+  const {t,lang}=useLang();const {content}=useContent();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  const [view,setView]=useState("list");
+  const [hp,setHp]=useState(true);
+  const [vol,setVol]=useState(75);
+  const [cur,setCur]=useState(0);
+  const [dur,setDur]=useState(0);
+  const audioRef=useRef(null);
+  const mainAudio=content.audio.find(a=>a.kind==="main");
+  const exhAudios=content.audio.filter(a=>a.kind!=="main");
+  useEffect(()=>()=>setPlaying(false),[]);
+  useEffect(()=>{const el=audioRef.current;if(el)el.volume=vol/100;},[vol,view,track]);
+  const parseTime=s=>{if(!s)return 0;const p=String(s).split(":").map(n=>parseInt(n)||0);return p.length>=2?p[0]*60+p[1]:p[0];};
+  const fmtTime=sec=>{sec=Math.floor(sec||0);if(sec<0)sec=0;return`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;};
+  const play=item=>{setTrack(item);setView("player");setCur(0);setDur(0);};
+  const togglePlay=()=>{const el=audioRef.current;if(!el)return;el.paused?el.play():el.pause();};
+  const seekTo=sec=>{const el=audioRef.current;if(el)el.currentTime=sec;};
+  const curChapter=track&&track.chapters?[...track.chapters].reverse().find(c=>parseTime(c.time)<=cur):null;
+  const eyebrow={fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:"#8086A0",fontWeight:600,marginBottom:12};
+  return(
+    <div style={{minHeight:"100%",background:view==="list"?"#EEF0F4":ON}}>
+      {view==="list"&&<div style={{paddingBottom:80}}>
+        <div style={{background:ON,padding:"52px 20px 20px"}}>
+          <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500}}>{t.audioExp}</p>
+          <h1 style={{fontFamily:"'Bodoni Moda',serif",fontSize:24,fontWeight:500,color:WH,marginTop:4,lineHeight:1.2}}>{t.audioTitle}</h1>
+          <button onClick={()=>setHp(h=>!h)} style={{marginTop:10,display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:20,border:`.5px solid ${hp?GD:"#33363F"}`,background:hp?`${G}18`:"transparent",color:hp?GL:MU,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+            {hp?t.hpOn:t.hpOff}
+          </button>
+        </div>
+        {!mainAudio&&exhAudios.length===0&&<div style={{padding:"48px 24px",textAlign:"center"}}>
+          <p style={{fontSize:13,color:"#8086A0",lineHeight:1.6}}>{L("Henüz ses içeriği yok.","No audio content yet.")}</p>
+          <p style={{fontSize:11,color:"#9CA0AD",marginTop:6}}>{L("Admin panelinden Sesli Rehber içeriği ekleyin.","Add Audio Guide content from the admin panel.")}</p>
+        </div>}
+        {mainAudio&&<div style={{padding:"20px 20px 0"}}>
+          <p style={eyebrow}>{L("Ana Gösterim · hatch immersive","Main Show · hatch immersive")}</p>
+          <Gate>
+            <div onClick={()=>play(mainAudio)} style={{background:ON,borderRadius:12,overflow:"hidden",cursor:"pointer",border:".5px solid #23252E"}}>
+              <div style={{height:172,position:"relative",background:mainAudio.img?"#000":"linear-gradient(160deg,#155E75 0%,#083344 50%,#0A0B10 100%)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {mainAudio.img&&<img src={mainAudio.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                {!mainAudio.img&&<div style={{position:"absolute",inset:0,opacity:.2,backgroundImage:`radial-gradient(ellipse at 40% 50%,${G} 0%,transparent 65%)`}}/>}
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 42%,rgba(0,0,0,.88))"}}/>
+                <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"16px"}}>
+                  <p style={{fontSize:10,letterSpacing:".15em",color:GL,textTransform:"uppercase",marginBottom:5}}>hatch immersive</p>
+                  <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:21,fontWeight:500,color:WH,lineHeight:1.2}}>{mainAudio.title}</h2>
+                  {mainAudio.artist&&<p style={{fontSize:12,color:"#9CA0AD",marginTop:3}}>{mainAudio.artist}</p>}
+                </div>
+              </div>
+              <div style={{padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <p style={{fontSize:11,color:MU}}>{mainAudio.chapters&&mainAudio.chapters.length>0?`${mainAudio.chapters.length} ${L("bölüm","chapters")}`:L("Sesli anlatım","Audio narration")}</p>
+                <div style={{width:40,height:40,borderRadius:"50%",background:G,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={ON} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+            </div>
+          </Gate>
+        </div>}
+        {exhAudios.length>0&&<div style={{padding:"20px"}}>
+          <p style={eyebrow}>{L("hatch dijital art · Sergi Anlatımları","hatch digital art · Exhibition Narrations")}</p>
+          <Gate>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {exhAudios.map(a=>(
+                <div key={a.id} onClick={()=>play(a)} style={{background:"#F4F5F8",border:".5px solid #C8CCD6",borderRadius:10,padding:"12px",display:"flex",gap:12,alignItems:"center",cursor:"pointer"}}>
+                  <div style={{width:48,height:48,minWidth:48,borderRadius:8,overflow:"hidden",background:a.img?"#000":"linear-gradient(135deg,#155E75,#0A0B10)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {a.img?<img src={a.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<svg width="16" height="16" viewBox="0 0 24 24" fill={G} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>}
+                  </div>
+                  <div style={{flex:1}}>
+                    <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:15,fontWeight:500,color:ON,lineHeight:1.2,fontStyle:"italic"}}>{a.title}</h3>
+                    <p style={{fontSize:11,color:"#8086A0",marginTop:2}}>{[a.artist,a.chapters&&a.chapters.length>0?`${a.chapters.length} ${L("bölüm","chapters")}`:null].filter(Boolean).join(" · ")}</p>
+                  </div>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill={GD} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              ))}
+            </div>
+          </Gate>
+        </div>}
+      </div>}
+
+      {view==="player"&&track&&<div style={{background:ON,minHeight:"100%",padding:"52px 20px 80px"}}>
+        <audio ref={audioRef} src={track.src} autoPlay
+          onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>setPlaying(false)}
+          onTimeUpdate={e=>setCur(e.target.currentTime)} onLoadedMetadata={e=>setDur(e.target.duration||0)}/>
+        <button onClick={()=>setView("list")} style={{display:"flex",alignItems:"center",gap:6,color:MU,fontSize:11,fontFamily:"'DM Sans',sans-serif",marginBottom:20,background:"none",border:"none",cursor:"pointer"}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>{t.back}
+        </button>
+        <div style={{textAlign:"center",marginBottom:22}}>
+          <div style={{width:150,height:150,borderRadius:16,overflow:"hidden",margin:"0 auto 16px",background:track.img?"#000":"linear-gradient(135deg,#155E75,#0A0B10)",border:".5px solid #23252E",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {track.img?<img src={track.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GD} strokeWidth="0.8" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>}
+          </div>
+          <p style={{fontSize:10,letterSpacing:".18em",color:G,textTransform:"uppercase",marginBottom:6}}>{track.kind==="main"?"hatch immersive":"hatch dijital art"}</p>
+          <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2}}>{track.title}</h2>
+          {track.artist&&<p style={{fontSize:12,color:MU,marginTop:5}}>{track.artist}</p>}
+          {curChapter&&<p style={{fontSize:12,color:GL,marginTop:7}}>{curChapter.title}</p>}
+        </div>
+        {playing&&<div style={{display:"flex",alignItems:"flex-end",justifyContent:"center",gap:3,height:26,marginBottom:18}}>
+          {[...Array(18)].map((_,i)=><span key={i} className="wbar" style={{height:`${16+((i*7)%20)}px`,animationDelay:`${i*.07}s`}}/>)}
+        </div>}
+        <div style={{marginBottom:16}}>
+          <input type="range" min="0" max={dur||0} step="0.1" value={cur} onChange={e=>seekTo(+e.target.value)} className="range"/>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+            <span style={{fontSize:10,color:MU}}>{fmtTime(cur)}</span>
+            <span style={{fontSize:10,color:MU}}>{fmtTime(dur)}</span>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:24,marginBottom:20}}>
+          <button onClick={()=>seekTo(Math.max(0,cur-15))} style={{background:"none",border:"none",cursor:"pointer"}}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.2" strokeLinecap="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button onClick={togglePlay} style={{width:58,height:58,borderRadius:"50%",background:G,border:"none",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {playing?<svg width="20" height="20" viewBox="0 0 24 24" fill={ON} stroke="none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>:<svg width="20" height="20" viewBox="0 0 24 24" fill={ON} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>}
+          </button>
+          <button onClick={()=>seekTo(Math.min(dur,cur+15))} style={{background:"none",border:"none",cursor:"pointer"}}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.2" strokeLinecap="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.5" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+          <input type="range" min="0" max="100" value={vol} onChange={e=>setVol(+e.target.value)} className="range" style={{flex:1}}/>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.5" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+        </div>
+        {track.desc&&<p style={{fontSize:13,color:"#9CA0AD",lineHeight:1.7,marginBottom:18}}>{track.desc}</p>}
+        {track.chapters&&track.chapters.length>0&&<div>
+          <p style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:MU,fontWeight:500,marginBottom:10}}>{t.chapters}</p>
+          {track.chapters.map((ch,i)=>(
+            <button key={i} onClick={()=>seekTo(parseTime(ch.time))} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 12px",borderRadius:7,border:`.5px solid ${curChapter===ch?GD:"#23252E"}`,background:curChapter===ch?`${G}12`:"transparent",textAlign:"left",fontFamily:"'DM Sans',sans-serif",width:"100%",cursor:"pointer",marginBottom:4}}>
+              <span style={{fontSize:12,color:curChapter===ch?GL:WH}}>{ch.title||L("Bölüm","Chapter")+" "+(i+1)}</span>
+              <span style={{fontSize:11,color:MU}}>{ch.time}</span>
+            </button>
+          ))}
+        </div>}
+      </div>}
+    </div>
+  );
+}
+
+function ProfileScreen(){
+  const {t,lang,setLang}=useLang();const {user,setUser}=useAuth();const {content}=useContent();const [showAuth,setShowAuth]=useState(false);const [showAbout,setShowAbout]=useState(false);
+  if(!user)return(
+    <div style={{padding:"80px 20px 80px",background:ON,minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
+      <Logo size={52}/><br/>
+      <p style={{fontSize:13,color:MU,lineHeight:1.6,marginBottom:24,maxWidth:280,marginTop:12}}>{t.memberDesc}</p>
+      <button onClick={()=>setShowAuth(true)} style={{padding:"13px 32px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
+      <div style={{marginTop:24,paddingTop:18,borderTop:".5px solid #23252E",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span style={{fontSize:13,color:WH}}>{t.lang}</span>
+        <div style={{display:"flex",gap:6}}>{["tr","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:"5px 12px",borderRadius:7,border:`.5px solid ${lang===l?GD:"#33363F"}`,color:lang===l?G:MU,background:lang===l?`${G}12`:"transparent",fontSize:11,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{l.toUpperCase()}</button>)}</div>
+      </div>
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
+    </div>
+  );
+  return(
+    <div style={{paddingBottom:80,background:ON,minHeight:"100%"}}>
+      <div style={{background:ON2,padding:"52px 20px 24px",borderBottom:".5px solid #23252E"}}>
+        <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:18}}>
+          <div style={{position:"relative"}}>
+            <div style={{width:60,height:60,borderRadius:"50%",background:`${GD}33`,border:`1.5px solid ${G}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <span style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,color:G,fontStyle:"italic"}}>{user.name.slice(0,2).toUpperCase()}</span>
+            </div>
+            <div style={{position:"absolute",bottom:0,right:0,width:16,height:16,borderRadius:"50%",background:G,border:`2px solid ${ON2}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill={ON} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <div>
+            <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH}}>{user.name}</h2>
+            <p style={{fontSize:12,color:MU,marginTop:2}}>{t.since} Mart 2024</p>
+            <span className="pill pill-gold" style={{marginTop:5,display:"inline-flex"}}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill={G} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{t.gold}
+            </span>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+          {[{l:t.wsLabel,v:"3"},{l:t.evLabel,v:"11"},{l:"Tracks",v:"24"}].map(s=>(
+            <div key={s.l} style={{background:ON,border:".5px solid #23252E",borderRadius:9,padding:"11px 8px",textAlign:"center"}}>
+              <div style={{fontSize:20,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif"}}>{s.v}</div>
+              <div style={{fontSize:9,color:MU,marginTop:3,letterSpacing:".06em",textTransform:"uppercase"}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{padding:"20px 20px 0"}}>
+        <div style={{background:"linear-gradient(135deg,#0E4456 0%,#0A0B10 100%)",border:`1px solid ${GD}55`,borderRadius:12,padding:"18px",marginBottom:20}}>
+          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:10}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={G} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span style={{fontSize:11,letterSpacing:".14em",textTransform:"uppercase",color:G,fontWeight:500}}>{t.goldPerks}</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {t.perks.map(p=><div key={p} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GD} strokeWidth="2" strokeLinecap="round" style={{marginTop:2,flexShrink:0}}><polyline points="20 6 9 17 4 12"/></svg>
+              <span style={{fontSize:12,color:"#8086A0",lineHeight:1.4}}>{p}</span>
+            </div>)}
+          </div>
+          <div style={{marginTop:14,paddingTop:12,borderTop:`.5px solid ${GD}33`,display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontSize:11,color:MU}}>{t.renews} 12 Haz 2026</span>
+            <span style={{fontSize:11,color:G}}>{t.active}</span>
+          </div>
+        </div>
+        {[{l:t.edit},{l:t.bookHist},{l:t.notif},
+          {l:lang==="tr"?"Hakkımızda":"About",act:()=>setShowAbout(true)},
+          {l:t.lang,extra:<div style={{display:"flex",gap:5}}>{["tr","en"].map(ll=><button key={ll} onClick={()=>setLang(ll)} style={{padding:"3px 9px",borderRadius:5,border:`.5px solid ${lang===ll?GD:"#33363F"}`,color:lang===ll?G:MU,background:lang===ll?`${G}12`:"transparent",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{ll.toUpperCase()}</button>)}</div>},
+          {l:t.signOut,danger:true,act:()=>setUser(null)}
+        ].map(item=>(
+          <div key={item.l} onClick={item.act} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"15px 0",borderBottom:".5px solid #181A22",cursor:item.act?"pointer":"default"}}>
+            <span style={{fontSize:13,color:item.danger?"#E07070":WH}}>{item.l}</span>
+            {item.extra||<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={item.danger?"#E07070":MU} strokeWidth="1.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>}
+          </div>
+        ))}
+      </div>
+      {showAbout&&(
+        <div className="modal-bg" onClick={()=>setShowAbout(false)}>
+          <div className="modal-sheet" onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH}}>{lang==="tr"?"Hakkımızda":"About"}</h2>
+              <button className="touch-btn" onClick={()=>setShowAbout(false)} style={{fontSize:20,color:MU,background:"none",border:"none",cursor:"pointer"}}>×</button>
+            </div>
+            <p style={{fontSize:13,color:"#9CA0AD",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{content.about}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ContentAdmin(){
+  const {lang}=useLang();const {addItem,content,updateAbout}=useContent();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  const [ctype,setCtype]=useState("events");
+  const [form,setForm]=useState({});
+  const [aboutTxt,setAboutTxt]=useState(content.about);
+  const [msg,setMsg]=useState("");
+  const types=[
+    {id:"events",label:L("Etkinlik","Event")},
+    {id:"workshops",label:L("Atölye","Workshop")},
+    {id:"products",label:L("Ürün","Product")},
+    {id:"exhibitions",label:L("Sergi","Exhibition")},
+    {id:"audio",label:L("Sesli Rehber","Audio Guide")},
+    {id:"about",label:L("Hakkımızda","About")},
+  ];
+  const fields={
+    events:[["name",L("Etkinlik adı","Event name"),"text",true],["date",L("Tarih","Date"),"date",true],["time",L("Saat — örn. 14:00","Time — e.g. 14:00"),"text",true],["spots",L("Kontenjan","Spots"),"number",true],["ticketUrl",L("Bilet sitesi linki","Ticket site link"),"text",true],["desc",L("Açıklama","Description"),"area",false],["img",L("Görsel","Image"),"image",false],["banner",L("Ana banner'da göster","Show on main banner"),"bool",false]],
+    workshops:[["name",L("Atölye adı","Workshop name"),"text",true],["date",L("Tarih","Date"),"date",true],["time",L("Saat — örn. 11:00–14:00","Time"),"text",true],["price",L("Fiyat — örn. ₺850","Price — e.g. ₺850"),"text",true],["level",L("Seviye","Level"),"text",true],["spots",L("Kontenjan","Spots"),"number",true],["ticketUrl",L("Bilet sitesi linki","Ticket site link"),"text",true],["desc",L("Açıklama","Description"),"area",true],["img",L("Görsel","Image"),"image",false],["banner",L("Ana banner'da göster","Show on main banner"),"bool",false]],
+    products:[["name",L("Ürün adı","Product name"),"text",true],["sub",L("Alt başlık","Subtitle"),"text",true],["price",L("Fiyat — örn. ₺480","Price — e.g. ₺480"),"text",true],["tag",L("Rozet — opsiyonel","Badge — optional"),"text",false],["desc",L("Açıklama","Description"),"area",false],["img",L("Görsel","Image"),"image",false]],
+    exhibitions:[["subkind",L("Tür","Type"),"select",true,[["immersive","studio HATCH Immersive"],["digital_art","studio HATCH Digital Art"]]],["status",L("Durum","Status"),"select",true,[["live",L("Yayında","Live")],["soon",L("Çok Yakında","Coming Soon")]]],["title",L("Sergi başlığı","Exhibition title"),"text",true],["date",L("Tarih metni — örn. Bu Hafta","Date text"),"text",false],["desc",L("Sergi hakkında","About the exhibition"),"area",true],["credits",L("Credits","Credits"),"area",false],["img",L("Görsel","Image"),"image",false],["banner",L("Ana banner'da göster","Show on main banner"),"bool",false]],
+    audio:[["kind",L("Tür","Type"),"select",true,[["main",L("Ana Gösterim · Immersive","Main Show · Immersive")],["exhibition",L("Sergi Anlatımı · hatch dijital art","Exhibition Narration")]]],["title",L("Ses başlığı","Audio title"),"text",true],["artist",L("Sanatçı / alt başlık — opsiyonel","Artist / subtitle — optional"),"text",false],["desc",L("Açıklama — opsiyonel","Description — optional"),"area",false],["img",L("Kapak görseli — opsiyonel","Cover image — optional"),"image",false],["src",L("Ses dosyası","Audio file"),"audiofile",true],["chapters",L("Bölümler","Chapters"),"chapters",false]],
+  };
+  const lbl={fontSize:10,color:MU,letterSpacing:".06em",textTransform:"uppercase",marginBottom:6,display:"block"};
+  const goldBtn={background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"};
+  const pickImg=file=>{
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const im=new Image();
+      im.onload=()=>{
+        const cv=document.createElement("canvas");const max=900;
+        let w=im.width,h=im.height;
+        if(w>max){h=Math.round(h*max/w);w=max;}
+        cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);
+        setForm(f=>({...f,img:cv.toDataURL("image/jpeg",0.82)}));
+      };
+      im.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  const pickAudio=file=>{
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>setForm(f=>({...f,src:ev.target.result,fileName:file.name}));
+    reader.readAsDataURL(file);
+  };
+  const submit=()=>{
+    for(const [k,,,req] of fields[ctype]){if(req&&!String(form[k]||"").trim()){setMsg(L("Tüm zorunlu alanları doldurun","Fill all required fields"));return;}}
+    const item={...form};
+    if(item.spots!==undefined)item.spots=parseInt(item.spots)||0;
+    if(item.chapters)item.chapters=item.chapters.filter(c=>(c.title||"").trim());
+    addItem(ctype,item);setForm({});setMsg(L("✓ Eklendi","✓ Added"));
+    setTimeout(()=>setMsg(""),2500);
+  };
+  return(
+    <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {types.map(ty=><button key={ty.id} onClick={()=>{setCtype(ty.id);setForm({});setMsg("");}} style={{padding:"6px 12px",borderRadius:7,fontSize:10,fontWeight:500,fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${ctype===ty.id?GD:"#23252E"}`,color:ctype===ty.id?G:MU,background:ctype===ty.id?`${G}12`:ON2,cursor:"pointer"}}>{ty.label}</button>)}
+      </div>
+      {ctype==="about"?(
+        <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
+          <label style={lbl}>{L("Hakkımızda metni","About text")}</label>
+          <textarea value={aboutTxt} onChange={e=>setAboutTxt(e.target.value)} rows={6} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6}}/>
+          <button onClick={()=>{updateAbout(aboutTxt);setMsg(L("✓ Kaydedildi","✓ Saved"));setTimeout(()=>setMsg(""),2500);}} style={goldBtn}>{L("Kaydet","Save")}</button>
+        </div>
+      ):(
+        <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
+          {fields[ctype].map(([k,label,type,,opts])=>(
+            <div key={k}>
+              {type!=="bool"&&<label style={lbl}>{label}</label>}
+              {type==="bool"
+                ?<label style={{display:"flex",gap:10,alignItems:"center",cursor:"pointer",padding:"6px 0"}}>
+                  <input type="checkbox" checked={!!form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.checked}))} style={{width:18,height:18,accentColor:G,cursor:"pointer"}}/>
+                  <span style={{fontSize:13,color:WH}}>{label}</span>
+                </label>
+                :type==="area"
+                ?<textarea value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} rows={3} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}/>
+                :type==="select"
+                ?<div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {opts.map(([ov,ol])=><button key={ov} type="button" onClick={()=>setForm(f=>({...f,[k]:ov}))} style={{padding:"10px 12px",borderRadius:8,fontSize:11,fontFamily:"'DM Sans',sans-serif",textAlign:"left",border:`.5px solid ${form[k]===ov?GD:"#33363F"}`,background:form[k]===ov?`${G}14`:ON,color:form[k]===ov?G:MU,cursor:"pointer"}}>{ol}</button>)}
+                </div>
+                :type==="chapters"
+                ?<div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {(form.chapters||[]).map((ch,ci)=>(
+                    <div key={ci} style={{display:"flex",gap:6}}>
+                      <input value={ch.title||""} onChange={e=>setForm(f=>{const cs=[...(f.chapters||[])];cs[ci]={...cs[ci],title:e.target.value};return{...f,chapters:cs};})} placeholder={L("Bölüm adı","Chapter name")} className="inp" style={{flex:1}}/>
+                      <input value={ch.time||""} onChange={e=>setForm(f=>{const cs=[...(f.chapters||[])];cs[ci]={...cs[ci],time:e.target.value};return{...f,chapters:cs};})} placeholder="4:15" className="inp" style={{width:62,textAlign:"center",padding:"12px 6px"}}/>
+                      <button type="button" onClick={()=>setForm(f=>({...f,chapters:(f.chapters||[]).filter((_,x)=>x!==ci)}))} style={{width:34,minWidth:34,borderRadius:8,border:".5px solid #33363F",background:ON,color:"#E07070",fontSize:15,cursor:"pointer"}}>×</button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={()=>setForm(f=>({...f,chapters:[...(f.chapters||[]),{title:"",time:""}]}))} style={{padding:"9px",borderRadius:8,border:".5px dashed #33363F",background:"transparent",color:G,fontSize:11,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>+ {L("Bölüm ekle","Add chapter")}</button>
+                </div>
+                :type==="image"
+                ?<div>
+                  {form.img&&<img src={form.img} alt="" style={{width:"100%",height:140,objectFit:"cover",borderRadius:9,marginBottom:8,border:".5px solid #23252E"}}/>}
+                  <label style={{display:"block",textAlign:"center",padding:"10px",border:".5px dashed #33363F",borderRadius:9,color:MU,fontSize:11,cursor:"pointer"}}>
+                    {form.img?L("Görseli değiştir","Change image"):L("Görsel seç","Choose image")}
+                    <input type="file" accept="image/*" onChange={e=>pickImg(e.target.files[0])} style={{display:"none"}}/>
+                  </label>
+                </div>
+                :type==="audiofile"
+                ?<div>
+                  {form.src&&<audio src={form.src} controls style={{width:"100%",marginBottom:8}}/>}
+                  {form.fileName&&<p style={{fontSize:11,color:GL,marginBottom:6}}>♪ {form.fileName}</p>}
+                  <label style={{display:"block",textAlign:"center",padding:"10px",border:".5px dashed #33363F",borderRadius:9,color:MU,fontSize:11,cursor:"pointer"}}>
+                    {form.src?L("Dosyayı değiştir","Change file"):L("Ses dosyası seç","Choose audio file")}
+                    <input type="file" accept="audio/*" onChange={e=>pickAudio(e.target.files[0])} style={{display:"none"}}/>
+                  </label>
+                </div>
+                :<input type={type==="number"?"number":type==="date"?"date":"text"} value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} className="inp" style={type==="date"?{colorScheme:"dark"}:undefined}/>}
+            </div>
+          ))}
+          <button onClick={submit} style={goldBtn}>{L("Ekle","Add")}</button>
+        </div>
+      )}
+      {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#8BB87A":"#E07070",textAlign:"center"}}>{msg}</p>}
+    </div>
+  );
+}
+
+function AdminPanel(){
+  const {t,lang}=useLang();const [tab,setTab]=useState("stats");
+  const stats=[{l:t.totalM,v:"1.284",ch:"+12%"},{l:t.goldM,v:"347",ch:"+8%"},{l:t.activeEv,v:"6",ch:""},{l:t.revenue,v:"₺94.200",ch:"+23%"}];
+  const users=[{n:"Gül Melis",e:"gulmelis@ex.com",p:"Gold"},{n:"Ayşe Kaya",e:"ayse@ex.com",p:"Gold"},{n:"Mehmet Demir",e:"mehmet@ex.com",p:"Free"},{n:"Selin Yıldız",e:"selin@ex.com",p:"Gold"}];
+  const evs=[{n:"Rehberli Tur",d:"18 May",cap:12,reg:8},{n:"Enkostik Atölye",d:"19 May",cap:15,reg:3},{n:"Sanatçı Söyleşisi",d:"23 May",cap:40,reg:40},{n:"Botanik İllüstrasyon",d:"25 May",cap:8,reg:0}];
+  return(
+    <div style={{paddingBottom:80,background:ON,minHeight:"100%"}}>
+      <div style={{padding:"52px 20px 16px",background:ON2,borderBottom:".5px solid #23252E"}}>
+        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span style={{fontSize:10,letterSpacing:".2em",textTransform:"uppercase",color:G,fontWeight:500}}>{t.admin}</span>
+        </div>
+        <Logo size={32}/>
+      </div>
+      <div style={{display:"flex",padding:"14px 20px",gap:6}}>
+        {["stats","users","events","content"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
+          {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="events"?t.adminEvents:(lang==="tr"?"İçerik Ekle":"Add Content")}
+        </button>)}
+      </div>
+      {tab==="stats"&&<div style={{padding:"0 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {stats.map(s=><div key={s.l} className="card" style={{padding:"16px"}}>
+          <p style={{fontSize:9,color:MU,letterSpacing:".1em",textTransform:"uppercase",marginBottom:7}}>{s.l}</p>
+          <p style={{fontSize:24,fontWeight:600,color:WH,fontFamily:"'Bodoni Moda',serif"}}>{s.v}</p>
+          {s.ch&&<p style={{fontSize:11,color:"#8BB87A",marginTop:3}}>{s.ch} bu ay</p>}
+        </div>)}
+      </div>}
+      {tab==="users"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:8}}>
+        <p className="sec-title">{t.recentM}</p>
+        {users.map(u=><div key={u.e} className="card" style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:`${GD}33`,border:`.5px solid ${GD}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <span style={{fontSize:11,color:G}}>{u.n.slice(0,2)}</span>
+            </div>
+            <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{u.n}</p><p style={{fontSize:10,color:MU,marginTop:1}}>{u.e}</p></div>
+          </div>
+          <span className={u.p==="Gold"?"pill pill-gold":"pill pill-muted"}>{u.p}</span>
+        </div>)}
+      </div>}
+      {tab==="events"&&<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:8}}>
+        <p className="sec-title">{t.manageEv}</p>
+        {evs.map(e=>{const pct=Math.round((e.reg/e.cap)*100);return(
+          <div key={e.n} className="card" style={{padding:"14px 16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+              <div><p style={{fontSize:13,color:WH,fontWeight:500}}>{e.n}</p><p style={{fontSize:11,color:MU,marginTop:2}}>{e.d}</p></div>
+              <span style={{fontSize:12,color:pct===100?"#E07070":G}}>{e.reg}/{e.cap}</span>
+            </div>
+            <div style={{height:3,background:"#23252E",borderRadius:2}}><div style={{height:"100%",width:`${pct}%`,background:pct===100?"#E07070":G,borderRadius:2}}/></div>
+          </div>
+        );})}
+      </div>}
+      {tab==="content"&&<ContentAdmin/>}
+    </div>
+  );
+}
+
+const INITIAL_CONTENT={
+  exhibitions:[
+    {id:1,subkind:"digital_art",status:"live",banner:true,title:"Frida Kahlo: Beyond the Canvas",desc:"Devrimci sanatçının hayatını keşfeden kapsamlı sergimiz.",credits:"Küratör: Selin Yıldız\nIşık tasarımı: Berkay Acar\nProdüksiyon: Studio HATCH",date:"Şimdi Açık"},
+    {id:2,subkind:"immersive",status:"live",title:"hatch immersive Açıldı",desc:"Üç misafir dijital sanatçı eserlerini sergiliyor.",credits:"Sanatçılar: Laila Osei, Kenji Mori, Ayşe Çelik\nTeknik direktör: Studio HATCH",date:"May 2026"},
+    {id:3,subkind:"digital_art",status:"soon",title:"Generative Garden",desc:"Üretken yapay zeka ile büyüyen dijital bahçe enstalasyonu.",date:"Yakında"},
+  ],
+  events:[
+    {id:1,name:"Rehberli Tur: Frida Kahlo",date:"2026-05-18",time:"14:00",spots:4},
+    {id:2,name:"Atölye: Enkostik Boyama",date:"2026-05-19",time:"11:00",spots:12},
+    {id:3,name:"Sanatçı Söyleşisi",date:"2026-05-23",time:"19:00",spots:0},
+  ],
+  workshops:[
+    {id:1,name:"Enkostik Balmumu Boyama",date:"2026-05-19",time:"11:00–14:00",price:"₺850",level:"Başlangıç",spots:12,desc:"Isıtılmış balmumu ve pigmentlerle boyama tekniğini keşfedin."},
+    {id:2,name:"Botanik İllüstrasyon",date:"2026-05-25",time:"10:00–13:00",price:"₺650",level:"Her Seviye",spots:8,desc:"Mürekkep ve suluboya ile hassas botanik çizimler."},
+    {id:3,name:"Lino Baskı Masterclass",date:"2026-06-01",time:"14:00–17:00",price:"₺950",level:"Orta",spots:6,desc:"Resident baskı sanatçısı Selin Yıldız ile uygulamalı seans."},
+    {id:4,name:"Seramik El Yapımı",date:"2026-06-07",time:"11:00–15:00",price:"₺1.100",level:"Her Seviye",spots:10,desc:"Sırlama ve pişirme dahil seramik şekillendirme."},
+  ],
+  products:[
+    {id:1,name:"Arşiv Baskı No. 1",sub:"Frida Serisi — 50 Adet Sınırlı",price:"₺2.800",tag:"Gold Erken Erişim"},
+    {id:2,name:"Studio HATCH Keten Çanta",sub:"Doğal / Onyx · El Baskı",price:"₺480",tag:"Yeni"},
+    {id:3,name:"Seramik Boncuk Kolye",sub:"Resident sanatçı Zara Kaya",price:"₺1.200",tag:""},
+    {id:4,name:"Eskiz Defteri — Gold Edition",sub:"200gsm · El Ciltli · 120 Sayfa",price:"₺320",tag:""},
+  ],
+  audio:[],
+  about:"Studio HATCH, sanatı yaşayan bir deneyime dönüştüren çağdaş bir sanat ve kültür merkezidir. Sergiler, atölyeler ve sesli rehberlerle ziyaretçilerini yaratıcılığın merkezine davet ediyoruz.",
+};
+
+function DetailPage({type,item,onClose}){
+  const {t,lang}=useLang();
+  const L=(tr,en)=>lang==="tr"?tr:en;
+  const title=item.name||item.title;
+  const rows=[];
+  if(type==="events"){
+    rows.push([L("Tarih","Date"),fmtD(item.date,lang).full],[L("Saat","Time"),item.time],[L("Kontenjan","Spots"),item.spots===0?L("Dolu","Full"):`${item.spots} ${t.spots}`]);
+  }else if(type==="workshops"){
+    rows.push([L("Tarih","Date"),fmtD(item.date,lang).full],[L("Saat","Time"),item.time],[L("Fiyat","Price"),item.price],[L("Seviye","Level"),item.level],[L("Kontenjan","Spots"),`${item.spots} ${t.spots}`]);
+  }else if(type==="products"){
+    if(item.sub)rows.push([L("Detay","Detail"),item.sub]);
+    rows.push([L("Fiyat","Price"),item.price]);
+  }else if(type==="exhibitions"){
+    if(item.subkind)rows.push([L("Tür","Type"),item.subkind==="immersive"?"studio HATCH Immersive":"studio HATCH Digital Art"]);
+    if(item.status)rows.push([L("Durum","Status"),item.status==="live"?L("Yayında","Live"):L("Çok Yakında","Coming Soon")]);
+    else if(item.cat)rows.push([L("Etiket","Label"),item.cat]);
+    if(item.date)rows.push([L("Tarih","Date"),item.date]);
+  }
+  return(
+    <div style={{position:"absolute",inset:0,background:ON,zIndex:300,overflowY:"auto"}}>
+      <div style={{position:"relative",height:280,background:item.img?"#000":"linear-gradient(160deg,#083344,#155E75 50%,#0A0B10)"}}>
+        {item.img&&<img src={item.img} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 55%,rgba(0,0,0,.92))"}}/>
+        <button onClick={onClose} style={{position:"absolute",top:48,left:16,width:38,height:38,borderRadius:"50%",background:"rgba(0,0,0,.55)",border:".5px solid #33363F",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={WH} strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        {item.tag&&<span className="pill pill-gold" style={{position:"absolute",bottom:56,left:20}}>{item.tag}</span>}
+        <h1 style={{position:"absolute",bottom:18,left:20,right:20,fontFamily:"'Bodoni Moda',serif",fontSize:24,fontWeight:500,color:WH,lineHeight:1.2}}>{title}</h1>
+      </div>
+      <div style={{padding:"18px 20px 110px"}}>
+        <div style={{marginBottom:item.desc?20:8}}>
+          {rows.map(([k,v])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:".5px solid #181A22"}}>
+              <span style={{fontSize:12,color:MU,letterSpacing:".04em"}}>{k}</span>
+              <span style={{fontSize:13,color:WH,fontWeight:500}}>{v}</span>
+            </div>
+          ))}
+        </div>
+        {item.desc&&<p style={{fontSize:13,color:"#9CA0AD",lineHeight:1.7,marginBottom:item.credits?16:24,whiteSpace:"pre-wrap"}}>{item.desc}</p>}
+        {item.credits&&<div style={{marginBottom:24,paddingTop:14,borderTop:".5px solid #1A1B22"}}>
+          <p style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GL,fontWeight:500,marginBottom:8}}>Credits</p>
+          <p style={{fontSize:12,color:"#9CA0AD",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{item.credits}</p>
+        </div>}
+        {type!=="exhibitions"&&<button onClick={()=>{if(type!=="products"&&item.ticketUrl)window.open(item.ticketUrl,"_blank");}} style={{width:"100%",background:G,border:"none",color:ON,padding:"14px",borderRadius:11,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{type==="products"?t.add:t.bookNow}</button>}
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [lang,setLang]=useState("tr");
+  const [user,setUser]=useState(null);
+  const [tab,setTab]=useState("home");
+  const [playing,setPlaying]=useState(false);
+  const [track,setTrack]=useState(null);
+  const [content,setContent]=useState(INITIAL_CONTENT);
+  const [detail,setDetail]=useState(null);
+  const t=T[lang];
+  const addItem=(type,item)=>setContent(c=>({...c,[type]:[{id:Date.now(),...item},...c[type]]}));
+  const updateAbout=txt=>setContent(c=>({...c,about:txt}));
+  const openDetail=(type,item)=>setDetail({type,item});
+  const tabs=[{id:"home",l:t.home},{id:"events",l:t.discover},{id:"audio",l:t.audio},{id:"profile",l:t.profile},...(user?.isAdmin?[{id:"admin",l:t.admin}]:[])];
+  return(
+    <LC.Provider value={{lang,t,setLang}}>
+      <AC.Provider value={{user,setUser}}>
+      <CC.Provider value={{content,addItem,updateAbout,openDetail}}>
+        <div className="app">
+          <div className="screens">
+            {tab==="home"&&<HomeScreen onNav={setTab}/>}
+            {tab==="events"&&<EventsScreen/>}
+            {tab==="audio"&&<AudioScreen playing={playing} setPlaying={setPlaying} track={track} setTrack={setTrack}/>}
+            {tab==="profile"&&<ProfileScreen/>}
+            {tab==="admin"&&<AdminPanel/>}
+          </div>
+          <nav className="nav">
+            {tabs.map(tb=>(
+              <button key={tb.id} className="nav-btn" onClick={()=>setTab(tb.id)} style={{background:"none",border:"none",cursor:"pointer"}}>
+                {tb.id==="audio"&&playing?(
+                  <div style={{display:"flex",alignItems:"flex-end",gap:2,height:20}}>
+                    {[...Array(4)].map((_,i)=><span key={i} className="wbar" style={{height:`${8+i*4}px`,animationDelay:`${i*.15}s`,background:tab==="audio"?G:MU}}/>)}
+                  </div>
+                ):<Icon id={tb.id} stroke={tab===tb.id?G:MU}/>}
+                <span className="nav-lbl" style={{color:tab===tb.id?G:MU}}>{tb.l}</span>
+              </button>
+            ))}
+          </nav>
+          {detail&&<DetailPage type={detail.type} item={detail.item} onClose={()=>setDetail(null)}/>}
+        </div>
+      </CC.Provider>
+      </AC.Provider>
+    </LC.Provider>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
