@@ -81,6 +81,19 @@ async function uploadMedia(fileOrBlob,prefix,ext){
   if(error){console.error("upload",error);return null;}
   return db.storage.from("media").getPublicUrl(path).data.publicUrl;
 }
+// --- Event tracking (CRM) ---
+function getAnonId(){try{let id=localStorage.getItem("hatch_aid");if(!id){id=(crypto.randomUUID&&crypto.randomUUID())||(Date.now()+"-"+Math.random().toString(36).slice(2));localStorage.setItem("hatch_aid",id);}return id;}catch(e){return null;}}
+async function track(eventType,properties,user){
+  try{
+    await db.from("events").insert({
+      person_id:user&&user.id?user.id:null,
+      anonymous_id:user&&user.id?null:getAnonId(),
+      event_type:eventType,
+      properties:properties||{},
+      source:"app"
+    });
+  }catch(e){/* best-effort */}
+}
 
 const T={
   tr:{
@@ -1025,7 +1038,9 @@ function NotifAdmin(){
 function AdminPanel(){
   const {t,lang}=useLang();const {content}=useContent();const [tab,setTab]=useState("stats");
   const [users,setUsers]=useState([]);
+  const [activity,setActivity]=useState([]);
   useEffect(()=>{db.from("profiles").select("*").order("created_at",{ascending:false}).then(({data})=>setUsers(data||[]));},[]);
+  useEffect(()=>{db.from("events").select("*").order("occurred_at",{ascending:false}).limit(100).then(({data})=>setActivity(data||[]));},[]);
   const stats=[
     {l:t.totalM,v:String(users.length),ch:""},
     {l:lang==="tr"?"Sergi":"Exhibitions",v:String(content.exhibitions.length),ch:""},
@@ -1043,8 +1058,8 @@ function AdminPanel(){
         <Logo size={32}/>
       </div>
       <div style={{display:"flex",padding:"14px 20px",gap:6}}>
-        {["stats","users","events","content","notif"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
-          {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="events"?t.adminEvents:tb==="content"?(lang==="tr"?"İçerik Ekle":"Add Content"):(lang==="tr"?"Duyuru":"Notify")}
+        {["stats","users","activity","events","content","notif"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
+          {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="activity"?(lang==="tr"?"Aktivite":"Activity"):tb==="events"?t.adminEvents:tb==="content"?(lang==="tr"?"İçerik Ekle":"Add Content"):(lang==="tr"?"Duyuru":"Notify")}
         </button>)}
       </div>
       {tab==="stats"&&<div style={{padding:"0 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -1077,6 +1092,28 @@ function AdminPanel(){
           </div>
         ))}
       </div>}
+      {tab==="activity"&&(()=>{
+        const counts=activity.reduce((a,e)=>{a[e.event_type]=(a[e.event_type]||0)+1;return a;},{});
+        const lbl={page_view:lang==="tr"?"Sayfa görüntüleme":"Page view",time_on_page:lang==="tr"?"Sayfada kalma":"Time on page",screen_view:lang==="tr"?"Ekran görüntüleme":"Screen view",content_view:lang==="tr"?"İçerik görüntüleme":"Content view"};
+        return <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:12}}>
+          {activity.length===0&&<p style={{fontSize:12,color:MU}}>{lang==="tr"?"Henüz aktivite verisi yok. Üyeler uygulamada gezindikçe burada görünecek.":"No activity data yet. It will appear as members use the app."}</p>}
+          {activity.length>0&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {Object.entries(counts).map(([k,v])=><div key={k} className="card" style={{padding:"14px 16px"}}>
+              <p style={{fontSize:9,color:MU,letterSpacing:".1em",textTransform:"uppercase",marginBottom:6}}>{lbl[k]||k}</p>
+              <p style={{fontSize:22,fontWeight:600,color:WH,fontFamily:"'Bodoni Moda',serif"}}>{v}</p>
+            </div>)}
+          </div>}
+          {activity.length>0&&<p className="sec-title">{lang==="tr"?"Son Aktiviteler":"Recent Activity"} ({activity.length})</p>}
+          {activity.slice(0,40).map(e=>{
+            const p=e.properties||{};const desc=p.title||p.screen||p.path||"";
+            const who=e.person_id?(lang==="tr"?"Üye":"Member"):(lang==="tr"?"Ziyaretçi":"Visitor");
+            return <div key={e.id} className="card" style={{padding:"10px 14px"}}>
+              <p style={{fontSize:12,color:WH,fontWeight:500}}>{lbl[e.event_type]||e.event_type}{desc?" · "+desc:""}</p>
+              <p style={{fontSize:10,color:MU,marginTop:2}}>{who} · {e.source} · {new Date(e.occurred_at).toLocaleString(lang==="tr"?"tr-TR":"en-US")}</p>
+            </div>;
+          })}
+        </div>;
+      })()}
       {tab==="content"&&<ContentAdmin/>}
       {tab==="notif"&&<NotifAdmin/>}
     </div>
@@ -1234,6 +1271,7 @@ function App(){
     const {data:sub}=db.auth.onAuthStateChange((event,session)=>{if(event==="PASSWORD_RECOVERY")setRecovery(true);apply(session);});
     return ()=>sub.subscription.unsubscribe();
   },[]);
+  useEffect(()=>{if(user)track("screen_view",{screen:tab},user);},[tab,user]);
   const addItem=async(typeKey,item)=>{
     const {id,...data}=item;
     const {error}=await db.from("content_items").insert({type:KEY_TO_TYPE[typeKey],data});
@@ -1256,7 +1294,7 @@ function App(){
     if(error){console.error(error);throw error;}
     setContent(c=>({...c,about:txt}));
   };
-  const openDetail=(type,item)=>setDetail({type,item});
+  const openDetail=(type,item)=>{track("content_view",{type,id:item&&item.id,title:item&&(item.title||item.name)},user);setDetail({type,item});};
   const tabs=[{id:"home",l:t.home},{id:"events",l:t.discover},{id:"audio",l:t.audio},{id:"profile",l:t.profile},...(user?.isAdmin?[{id:"admin",l:t.admin}]:[])];
   return(
     <LC.Provider value={{lang,t,setLang}}>
