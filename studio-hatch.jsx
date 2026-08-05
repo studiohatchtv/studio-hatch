@@ -276,7 +276,7 @@ function HomeScreen({ onNavigate }) {
       <div style={{ padding: "56px 24px 24px", background: `linear-gradient(${ONYX} 60%, transparent)` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
           <div>
-            <p style={{ fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTED, fontWeight: 500 }}>Good Evening</p>
+            <p style={{ fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTED, fontWeight: 500 }}>{(() => { const h = new Date().getHours(); return h < 12 ? "Good Morning" : h < 18 ? "Good Afternoon" : "Good Evening"; })()}</p>
             <h1 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 30, fontWeight: 500, color: WHITE, lineHeight: 1.1 }}>Studio HATCH</h1>
           </div>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: GOLD_DIM + "33", border: `1px solid ${GOLD_DIM}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
