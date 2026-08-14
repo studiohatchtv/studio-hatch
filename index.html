@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Studio HATCH</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,8 +13,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{background:#0A0B10;font-family:'DM Sans',sans-serif}
-.app{width:100%;max-width:480px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;background:#0A0B10;color:#F4F5F8;position:relative;overflow:hidden}
+body{background:#0A0B10;font-family:'Inter',sans-serif}
+.app{width:100%;max-width:480px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;background:#0A0B10;color:#F3EFE6;position:relative;overflow:hidden}
 @media(max-width:480px){.app{max-width:100%}}
 .screens{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;-webkit-overflow-scrolling:touch}
 .nav{height:60px;flex-shrink:0;background:#13151C;border-top:.5px solid #23252E;display:flex;align-items:center;justify-content:space-around;z-index:100}
@@ -25,7 +25,7 @@ body{background:#0A0B10;font-family:'DM Sans',sans-serif}
 .pill-muted{background:rgba(35,37,46,.13);border:.5px solid #33363F;color:#6E727E}
 .card{background:#13151C;border:.5px solid #23252E;border-radius:12px;overflow:hidden}
 .sec-title{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6E727E;font-weight:500;margin-bottom:16px}
-.inp{width:100%;padding:12px 16px;background:#0A0B10;border:.5px solid #33363F;border-radius:10px;color:#F4F5F8;font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.inp{width:100%;padding:12px 16px;background:#0A0B10;border:.5px solid #33363F;border-radius:10px;color:#F3EFE6;font-family:'Inter',sans-serif;font-size:14px;outline:none}
 .inp:focus{border-color:#2E4D8C}
 .inp::placeholder{color:#6E727E}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:flex-end}
@@ -45,7 +45,7 @@ body{background:#0A0B10;font-family:'DM Sans',sans-serif}
 <div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useRef,createContext,useContext} = React;
-const G="#06B6D4",GL="#67E8F9",GD="#0E7490",ON="#0A0B10",ON2="#13151C",ON3="#1B1D26",MU="#6E727E",WH="#F4F5F8";
+const G="#C7FF36",GL="#D9FF73",GD="#1649D8",ON="#0A0B10",ON2="#13151C",ON3="#1B1D26",MU="#6E727E",WH="#F3EFE6";
 
 // --- Supabase ---
 const SUPABASE_URL="https://qchvgklnydqizjoosfpd.supabase.co";
@@ -237,7 +237,7 @@ function AuthModal({onClose}){
     const {error}=await db.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+window.location.pathname}});
     if(error){setErr(L("Hata: ","Error: ")+(error.message||""));setBusy(false);}
   };
-  const socialBtn={width:"100%",padding:"12px 14px",borderRadius:10,fontSize:13,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10};
+  const socialBtn={width:"100%",padding:"12px 14px",borderRadius:10,fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10};
   return(
     <div className="modal-bg" onClick={onClose}>
       <div className="modal-sheet" onClick={e=>e.stopPropagation()}>
@@ -276,7 +276,7 @@ function AuthModal({onClose}){
           </label>
         </div>}
         {err&&<p style={{fontSize:12,color:err.startsWith("Hata")||err.startsWith("Error")?"#E07070":"#86EFAC",lineHeight:1.5,marginTop:14,textAlign:"center"}}>{err}</p>}
-        <button onClick={submit} disabled={!canSubmit} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:canSubmit?G:"#23252E",border:"none",color:canSubmit?ON:MU,fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.7}}>{busy?"…":(mode==="reset"?L("Sıfırlama bağlantısı gönder","Send reset link"):mode==="login"?t.login:t.register)}</button>
+        <button onClick={submit} disabled={!canSubmit} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:canSubmit?G:"#23252E",border:"none",color:canSubmit?ON:MU,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.7}}>{busy?"…":(mode==="reset"?L("Sıfırlama bağlantısı gönder","Send reset link"):mode==="login"?t.login:t.register)}</button>
         <p style={{textAlign:"center",marginTop:12,fontSize:12,color:MU}}>
           {mode==="reset"?<span onClick={()=>{setMode("login");setErr("");}} style={{color:GL,cursor:"pointer"}}>{L("← Girişe dön","← Back to login")}</span>:<>{mode==="login"?t.noAcc:t.haveAcc}{" "}<span onClick={()=>setMode(mode==="login"?"register":"login")} style={{color:GL,cursor:"pointer"}}>{mode==="login"?t.register:t.login}</span></>}
         </p>
@@ -294,9 +294,9 @@ function Gate({children}){
         <div style={{width:52,height:52,borderRadius:"50%",background:`${GD}22`,border:`1px solid ${GD}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         </div>
-        <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:19,color:WH,marginBottom:8,fontStyle:"italic"}}>{t.memberReq}</h3>
+        <h3 style={{fontFamily:"'Archivo',serif",fontSize:19,color:WH,marginBottom:8,fontStyle:"italic"}}>{t.memberReq}</h3>
         <p style={{fontSize:13,color:MU,lineHeight:1.6,marginBottom:18}}>{t.memberDesc}</p>
-        <button onClick={()=>setShow(true)} style={{padding:"11px 26px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
+        <button onClick={()=>setShow(true)} style={{padding:"11px 26px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
       </div>
       {show&&<AuthModal onClose={()=>setShow(false)}/>}
     </>
@@ -318,7 +318,7 @@ function NotifPanel({onClose}){
     <div className="modal-bg" onClick={onClose}>
       <div className="modal-sheet" onClick={e=>e.stopPropagation()} style={{maxHeight:"80vh",overflowY:"auto"}}>
         <div style={{width:36,height:3,background:"#33363F",borderRadius:2,margin:"0 auto 18px"}}/>
-        <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,marginBottom:16}}>{L("Bildirimler","Notifications")}</h2>
+        <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH,marginBottom:16}}>{L("Bildirimler","Notifications")}</h2>
         {notifs.length===0&&<p style={{fontSize:13,color:MU,textAlign:"center",padding:"24px 0"}}>{L("Henüz bildirim yok.","No notifications yet.")}</p>}
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {notifs.map(n=>(
@@ -331,7 +331,7 @@ function NotifPanel({onClose}){
             </div>
           ))}
         </div>
-        <button onClick={onClose} style={{width:"100%",marginTop:18,padding:"12px",border:".5px solid #33363F",borderRadius:10,color:MU,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:ON2,cursor:"pointer"}}>{L("Kapat","Close")}</button>
+        <button onClick={onClose} style={{width:"100%",marginTop:18,padding:"12px",border:".5px solid #33363F",borderRadius:10,color:MU,fontSize:12,fontFamily:"'Inter',sans-serif",background:ON2,cursor:"pointer"}}>{L("Kapat","Close")}</button>
       </div>
     </div>
   );
@@ -371,7 +371,7 @@ function HomeScreen({onNav}){
       ];if(banners.length===0)return null;return(
         <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:12}}>
           {banners.map(b=>{const live=b._t==="exhibitions"&&b.status==="live";const soon=b._t==="exhibitions"&&b.status==="soon";return(
-            <div key={`${b._t}-${b.id}`} onClick={()=>openDetail(b._t,b)} style={{cursor:"pointer",borderRadius:12,overflow:"hidden",height:210,background:b.img?"#000":"linear-gradient(160deg,#083344 0%,#155E75 40%,#0A0B10 100%)",border:".5px solid #23252E",position:"relative"}}>
+            <div key={`${b._t}-${b.id}`} onClick={()=>openDetail(b._t,b)} style={{cursor:"pointer",borderRadius:12,overflow:"hidden",height:210,background:b.img?"#000":"linear-gradient(160deg,#0d1030 0%,#1649D8 40%,#0A0B10 100%)",border:".5px solid #23252E",position:"relative"}}>
               {b.img&&<img src={b.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
               {!b.img&&<div style={{position:"absolute",inset:0,opacity:.18,backgroundImage:`radial-gradient(ellipse at 30% 40%,${G} 0%,transparent 60%)`}}/>}
               <div style={{position:"absolute",top:14,left:14,display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -381,7 +381,7 @@ function HomeScreen({onNav}){
                 {b._t==="workshops"&&<span className="pill" style={{background:`${G}1A`,border:`.5px solid ${GD}`,color:GL}}>{lang==="tr"?"Atölye":"Workshop"}</span>}
               </div>
               <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"18px 16px",background:"linear-gradient(transparent,rgba(0,0,0,.92))"}}>
-                <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2,marginBottom:4}}>{b.title||b.name}</h2>
+                <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2,marginBottom:4}}>{b.title||b.name}</h2>
                 <p style={{fontSize:12,color:"#9CA0AD",lineHeight:1.5}}>{b._t==="exhibitions"?[(b.subkind==="immersive"?"studio HATCH Immersive":"studio HATCH Digital Art"),fmtRange(b,lang)].filter(Boolean).join(" · "):([fmtD(b.date,lang).full,fmtSessions(b)].filter(Boolean).join(" · ")||b.desc||"")}</p>
               </div>
             </div>
@@ -434,14 +434,14 @@ function HomeScreen({onNav}){
           {upcoming.map(e=>{const k=`${e._t}-${e.id}`;const dd=fmtD(e.date,lang);return(
             <div key={k} className="card" onClick={()=>openDetail(e._t,e)} style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
               <div style={{textAlign:"center",minWidth:38}}>
-                <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif",lineHeight:1}}>{dd.day}</div>
+                <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Archivo',serif",lineHeight:1}}>{dd.day}</div>
                 <div style={{fontSize:9,color:MU,marginTop:2,letterSpacing:".05em"}}>{(dd.mon||"").toUpperCase()}</div>
               </div>
               <div style={{flex:1}}>
                 <p style={{fontSize:13,fontWeight:500,color:WH,lineHeight:1.3}}>{e.name}</p>
                 <p style={{fontSize:11,color:MU,marginTop:2}}>{fmtSessions(e)&&<span>{fmtSessions(e)} · </span>}{e.spots===0?<span style={{color:"#E07070"}}>{t.full}</span>:<span style={{color:"#8BB87A"}}>{e.spots} {t.spots}</span>}</p>
               </div>
-              <button onClick={ev=>{ev.stopPropagation();setReminded(r=>({...r,[k]:!r[k]}));}} style={{border:`.5px solid ${reminded[k]?GD:"#33363F"}`,borderRadius:7,padding:"6px 11px",fontSize:10,color:reminded[k]?G:MU,fontFamily:"'DM Sans',sans-serif",background:reminded[k]?`${G}14`:"transparent",cursor:"pointer"}}>
+              <button onClick={ev=>{ev.stopPropagation();setReminded(r=>({...r,[k]:!r[k]}));}} style={{border:`.5px solid ${reminded[k]?GD:"#33363F"}`,borderRadius:7,padding:"6px 11px",fontSize:10,color:reminded[k]?G:MU,fontFamily:"'Inter',sans-serif",background:reminded[k]?`${G}14`:"transparent",cursor:"pointer"}}>
                 {reminded[k]?t.reminded:t.remind}
               </button>
             </div>
@@ -454,14 +454,14 @@ function HomeScreen({onNav}){
         <div onClick={()=>onNav("events")} style={{cursor:"pointer",borderRadius:12,overflow:"hidden",height:110,background:"linear-gradient(120deg,#0A1115 0%,#103D48 45%,#0A0B10 100%)",border:".5px solid #23252E",position:"relative",marginBottom:12}}>
           <div style={{position:"absolute",inset:0,opacity:.14,backgroundImage:`radial-gradient(ellipse at 70% 50%,${G} 0%,transparent 60%)`}}/>
           <div style={{position:"absolute",inset:0,padding:"0 18px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-            <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:18,fontWeight:500,color:WH,marginBottom:4}}>Sınırlı Sayıda Baskılar & Objeler</h3>
+            <h3 style={{fontFamily:"'Archivo',serif",fontSize:18,fontWeight:500,color:WH,marginBottom:4}}>Sınırlı Sayıda Baskılar & Objeler</h3>
             <p style={{fontSize:11,color:"#9CA0AD"}}>Tüm koleksiyonu keşfet →</p>
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {content.products.slice(0,6).map(p=>(
             <div key={p.id} className="card" onClick={()=>openDetail("products",p)} style={{cursor:"pointer",overflow:"hidden"}}>
-              <div style={{height:96,background:p.img?"#000":"linear-gradient(150deg,#083344,#155E75 60%,#0A0B10)"}}>
+              <div style={{height:96,background:p.img?"#000":"linear-gradient(150deg,#0d1030,#1649D8 60%,#0A0B10)"}}>
                 {p.img&&<img src={p.img} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
               </div>
               <div style={{padding:"10px 12px"}}>
@@ -504,7 +504,7 @@ function Calendar({items,openDetail}){
       <div className="card" style={{padding:"14px 14px 12px",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <button onClick={()=>shift(-1)} style={navBtn}>‹</button>
-          <span style={{fontFamily:"'Bodoni Moda',serif",fontSize:15,color:WH}}>{monName} {y}</span>
+          <span style={{fontFamily:"'Archivo',serif",fontSize:15,color:WH}}>{monName} {y}</span>
           <button onClick={()=>shift(1)} style={navBtn}>›</button>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:5}}>
@@ -516,7 +516,7 @@ function Calendar({items,openDetail}){
             const iso=`${y}-${pad(m+1)}-${pad(d)}`;
             const has=!!byDate[iso],isSel=sel===iso,isToday=iso===tIso;
             return(
-              <button key={i} onClick={()=>has&&setSel(isSel?null:iso)} style={{aspectRatio:"1",border:isToday?`.5px solid ${GD}`:".5px solid transparent",borderRadius:7,background:isSel?G:has?`${G}1A`:"transparent",color:isSel?ON:has?GL:WH,fontSize:11,fontWeight:has?600:400,fontFamily:"'DM Sans',sans-serif",cursor:has?"pointer":"default",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <button key={i} onClick={()=>has&&setSel(isSel?null:iso)} style={{aspectRatio:"1",border:isToday?`.5px solid ${GD}`:".5px solid transparent",borderRadius:7,background:isSel?G:has?`${G}1A`:"transparent",color:isSel?ON:has?GL:WH,fontSize:11,fontWeight:has?600:400,fontFamily:"'Inter',sans-serif",cursor:has?"pointer":"default",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
                 {d}
                 {has&&!isSel&&<span style={{width:3,height:3,borderRadius:"50%",background:G,marginTop:2}}/>}
               </button>
@@ -530,7 +530,7 @@ function Calendar({items,openDetail}){
         {list.map(e=>{const dd=fmtD(e.date,lang);return(
           <div key={`${e._t}-${e.id}`} className="card" onClick={()=>openDetail(e._t,e)} style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
             <div style={{textAlign:"center",minWidth:38}}>
-              <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif",lineHeight:1}}>{dd.day}</div>
+              <div style={{fontSize:17,fontWeight:600,color:G,fontFamily:"'Archivo',serif",lineHeight:1}}>{dd.day}</div>
               <div style={{fontSize:9,color:MU,marginTop:2}}>{(dd.mon||"").toUpperCase()}</div>
             </div>
             <div style={{flex:1}}>
@@ -556,11 +556,11 @@ function EventsScreen(){
     <div style={{paddingBottom:80}}>
       <div style={{padding:"52px 20px 18px"}}>
         <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500}}>Keşfet</p>
-        <h1 style={{fontFamily:"'Bodoni Moda',serif",fontSize:26,fontWeight:500,color:WH,marginTop:4}}>{tabLabel(tab)}</h1>
+        <h1 style={{fontFamily:"'Archivo',serif",fontSize:26,fontWeight:500,color:WH,marginTop:4}}>{tabLabel(tab)}</h1>
       </div>
       <div style={{display:"flex",padding:"0 20px",gap:6,marginBottom:20}}>
         {["calendar","workshops","products"].map(tb=>(
-          <button key={tb} onClick={()=>setTab(tb)} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:10,fontWeight:500,letterSpacing:".05em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer",transition:"all .25s"}}>
+          <button key={tb} onClick={()=>setTab(tb)} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:10,fontWeight:500,letterSpacing:".05em",textTransform:"uppercase",fontFamily:"'Inter',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer",transition:"all .25s"}}>
             {tabShort(tb)}
           </button>
         ))}
@@ -576,7 +576,7 @@ function EventsScreen(){
             <p style={{fontSize:12,color:MU,lineHeight:1.6,marginBottom:10}}>{w.desc}</p>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <span className="pill pill-muted">{w.level}</span>
-              <button onClick={ev=>{ev.stopPropagation();if(w.ticketUrl)window.open(w.ticketUrl,"_blank");}} style={{background:`${G}18`,border:`.5px solid ${GD}`,color:G,padding:"7px 16px",borderRadius:7,fontSize:11,fontWeight:500,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.bookNow}</button>
+              <button onClick={ev=>{ev.stopPropagation();if(w.ticketUrl)window.open(w.ticketUrl,"_blank");}} style={{background:`${G}18`,border:`.5px solid ${GD}`,color:G,padding:"7px 16px",borderRadius:7,fontSize:11,fontWeight:500,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{t.bookNow}</button>
             </div>
           </div>
         ))}
@@ -591,7 +591,7 @@ function EventsScreen(){
             </div>
             <div style={{textAlign:"right",marginLeft:14}}>
               <div style={{fontSize:14,fontWeight:600,color:G}}>{p.price}</div>
-              <button onClick={ev=>ev.stopPropagation()} style={{marginTop:7,background:"transparent",border:".5px solid #33363F",color:MU,padding:"5px 12px",borderRadius:7,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.add}</button>
+              <button onClick={ev=>ev.stopPropagation()} style={{marginTop:7,background:"transparent",border:".5px solid #33363F",color:MU,padding:"5px 12px",borderRadius:7,fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{t.add}</button>
             </div>
           </div>
         ))}
@@ -625,8 +625,8 @@ function AudioScreen({playing,setPlaying,track,setTrack}){
       {view==="list"&&<div style={{paddingBottom:80}}>
         <div style={{background:ON,padding:"52px 20px 20px"}}>
           <p style={{fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",color:MU,fontWeight:500}}>{t.audioExp}</p>
-          <h1 style={{fontFamily:"'Bodoni Moda',serif",fontSize:24,fontWeight:500,color:WH,marginTop:4,lineHeight:1.2}}>{t.audioTitle}</h1>
-          <button onClick={()=>setHp(h=>!h)} style={{marginTop:10,display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:20,border:`.5px solid ${hp?GD:"#33363F"}`,background:hp?`${G}18`:"transparent",color:hp?GL:MU,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>
+          <h1 style={{fontFamily:"'Archivo',serif",fontSize:24,fontWeight:500,color:WH,marginTop:4,lineHeight:1.2}}>{t.audioTitle}</h1>
+          <button onClick={()=>setHp(h=>!h)} style={{marginTop:10,display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:20,border:`.5px solid ${hp?GD:"#33363F"}`,background:hp?`${G}18`:"transparent",color:hp?GL:MU,fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
             {hp?t.hpOn:t.hpOff}
           </button>
@@ -639,13 +639,13 @@ function AudioScreen({playing,setPlaying,track,setTrack}){
           <p style={eyebrow}>{L("Ana Gösterim · hatch immersive","Main Show · hatch immersive")}</p>
           <Gate>
             <div onClick={()=>play(mainAudio)} style={{background:ON,borderRadius:12,overflow:"hidden",cursor:"pointer",border:".5px solid #23252E"}}>
-              <div style={{height:172,position:"relative",background:mainAudio.img?"#000":"linear-gradient(160deg,#155E75 0%,#083344 50%,#0A0B10 100%)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <div style={{height:172,position:"relative",background:mainAudio.img?"#000":"linear-gradient(160deg,#1649D8 0%,#0d1030 50%,#0A0B10 100%)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                 {mainAudio.img&&<img src={mainAudio.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
                 {!mainAudio.img&&<div style={{position:"absolute",inset:0,opacity:.2,backgroundImage:`radial-gradient(ellipse at 40% 50%,${G} 0%,transparent 65%)`}}/>}
                 <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 42%,rgba(0,0,0,.88))"}}/>
                 <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"16px"}}>
                   <p style={{fontSize:10,letterSpacing:".15em",color:GL,textTransform:"uppercase",marginBottom:5}}>hatch immersive</p>
-                  <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:21,fontWeight:500,color:WH,lineHeight:1.2}}>{mainAudio.title}</h2>
+                  <h2 style={{fontFamily:"'Archivo',serif",fontSize:21,fontWeight:500,color:WH,lineHeight:1.2}}>{mainAudio.title}</h2>
                   {mainAudio.artist&&<p style={{fontSize:12,color:"#9CA0AD",marginTop:3}}>{mainAudio.artist}</p>}
                 </div>
               </div>
@@ -663,12 +663,12 @@ function AudioScreen({playing,setPlaying,track,setTrack}){
           <Gate>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {exhAudios.map(a=>(
-                <div key={a.id} onClick={()=>play(a)} style={{background:"#F4F5F8",border:".5px solid #C8CCD6",borderRadius:10,padding:"12px",display:"flex",gap:12,alignItems:"center",cursor:"pointer"}}>
-                  <div style={{width:48,height:48,minWidth:48,borderRadius:8,overflow:"hidden",background:a.img?"#000":"linear-gradient(135deg,#155E75,#0A0B10)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div key={a.id} onClick={()=>play(a)} style={{background:"#F3EFE6",border:".5px solid #C8CCD6",borderRadius:10,padding:"12px",display:"flex",gap:12,alignItems:"center",cursor:"pointer"}}>
+                  <div style={{width:48,height:48,minWidth:48,borderRadius:8,overflow:"hidden",background:a.img?"#000":"linear-gradient(135deg,#1649D8,#0A0B10)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                     {a.img?<img src={a.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<svg width="16" height="16" viewBox="0 0 24 24" fill={G} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>}
                   </div>
                   <div style={{flex:1}}>
-                    <h3 style={{fontFamily:"'Bodoni Moda',serif",fontSize:15,fontWeight:500,color:ON,lineHeight:1.2,fontStyle:"italic"}}>{a.title}</h3>
+                    <h3 style={{fontFamily:"'Archivo',serif",fontSize:15,fontWeight:500,color:ON,lineHeight:1.2,fontStyle:"italic"}}>{a.title}</h3>
                     <p style={{fontSize:11,color:"#8086A0",marginTop:2}}>{[a.artist,a.chapters&&a.chapters.length>0?`${a.chapters.length} ${L("bölüm","chapters")}`:null].filter(Boolean).join(" · ")}</p>
                   </div>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill={GD} stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -683,15 +683,15 @@ function AudioScreen({playing,setPlaying,track,setTrack}){
         <audio ref={audioRef} src={track.src} autoPlay
           onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>setPlaying(false)}
           onTimeUpdate={e=>setCur(e.target.currentTime)} onLoadedMetadata={e=>setDur(e.target.duration||0)}/>
-        <button onClick={()=>setView("list")} style={{display:"flex",alignItems:"center",gap:6,color:MU,fontSize:11,fontFamily:"'DM Sans',sans-serif",marginBottom:20,background:"none",border:"none",cursor:"pointer"}}>
+        <button onClick={()=>setView("list")} style={{display:"flex",alignItems:"center",gap:6,color:MU,fontSize:11,fontFamily:"'Inter',sans-serif",marginBottom:20,background:"none",border:"none",cursor:"pointer"}}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MU} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>{t.back}
         </button>
         <div style={{textAlign:"center",marginBottom:22}}>
-          <div style={{width:150,height:150,borderRadius:16,overflow:"hidden",margin:"0 auto 16px",background:track.img?"#000":"linear-gradient(135deg,#155E75,#0A0B10)",border:".5px solid #23252E",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{width:150,height:150,borderRadius:16,overflow:"hidden",margin:"0 auto 16px",background:track.img?"#000":"linear-gradient(135deg,#1649D8,#0A0B10)",border:".5px solid #23252E",display:"flex",alignItems:"center",justifyContent:"center"}}>
             {track.img?<img src={track.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GD} strokeWidth="0.8" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>}
           </div>
           <p style={{fontSize:10,letterSpacing:".18em",color:G,textTransform:"uppercase",marginBottom:6}}>{track.kind==="main"?"hatch immersive":"hatch dijital art"}</p>
-          <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2}}>{track.title}</h2>
+          <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH,lineHeight:1.2}}>{track.title}</h2>
           {track.artist&&<p style={{fontSize:12,color:MU,marginTop:5}}>{track.artist}</p>}
           {curChapter&&<p style={{fontSize:12,color:GL,marginTop:7}}>{curChapter.title}</p>}
         </div>
@@ -725,7 +725,7 @@ function AudioScreen({playing,setPlaying,track,setTrack}){
         {track.chapters&&track.chapters.length>0&&<div>
           <p style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:MU,fontWeight:500,marginBottom:10}}>{t.chapters}</p>
           {track.chapters.map((ch,i)=>(
-            <button key={i} onClick={()=>seekTo(parseTime(ch.time))} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 12px",borderRadius:7,border:`.5px solid ${curChapter===ch?GD:"#23252E"}`,background:curChapter===ch?`${G}12`:"transparent",textAlign:"left",fontFamily:"'DM Sans',sans-serif",width:"100%",cursor:"pointer",marginBottom:4}}>
+            <button key={i} onClick={()=>seekTo(parseTime(ch.time))} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 12px",borderRadius:7,border:`.5px solid ${curChapter===ch?GD:"#23252E"}`,background:curChapter===ch?`${G}12`:"transparent",textAlign:"left",fontFamily:"'Inter',sans-serif",width:"100%",cursor:"pointer",marginBottom:4}}>
               <span style={{fontSize:12,color:curChapter===ch?GL:WH}}>{ch.title||L("Bölüm","Chapter")+" "+(i+1)}</span>
               <span style={{fontSize:11,color:MU}}>{ch.time}</span>
             </button>
@@ -742,10 +742,10 @@ function ProfileScreen(){
     <div style={{padding:"80px 20px 80px",background:ON,minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
       <Logo size={52}/><br/>
       <p style={{fontSize:13,color:MU,lineHeight:1.6,marginBottom:24,maxWidth:280,marginTop:12}}>{t.memberDesc}</p>
-      <button onClick={()=>setShowAuth(true)} style={{padding:"13px 32px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
+      <button onClick={()=>setShowAuth(true)} style={{padding:"13px 32px",background:G,border:"none",borderRadius:10,color:ON,fontSize:13,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{t.loginReg}</button>
       <div style={{marginTop:24,paddingTop:18,borderTop:".5px solid #23252E",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <span style={{fontSize:13,color:WH}}>{t.lang}</span>
-        <div style={{display:"flex",gap:6}}>{["tr","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:"5px 12px",borderRadius:7,border:`.5px solid ${lang===l?GD:"#33363F"}`,color:lang===l?G:MU,background:lang===l?`${G}12`:"transparent",fontSize:11,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{l.toUpperCase()}</button>)}</div>
+        <div style={{display:"flex",gap:6}}>{["tr","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:"5px 12px",borderRadius:7,border:`.5px solid ${lang===l?GD:"#33363F"}`,color:lang===l?G:MU,background:lang===l?`${G}12`:"transparent",fontSize:11,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{l.toUpperCase()}</button>)}</div>
       </div>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
     </div>
@@ -756,14 +756,14 @@ function ProfileScreen(){
         <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:18}}>
           <div style={{position:"relative"}}>
             <div style={{width:60,height:60,borderRadius:"50%",background:`${GD}33`,border:`1.5px solid ${G}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <span style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,color:G,fontStyle:"italic"}}>{user.name.slice(0,2).toUpperCase()}</span>
+              <span style={{fontFamily:"'Archivo',serif",fontSize:20,color:G,fontStyle:"italic"}}>{user.name.slice(0,2).toUpperCase()}</span>
             </div>
             <div style={{position:"absolute",bottom:0,right:0,width:16,height:16,borderRadius:"50%",background:G,border:`2px solid ${ON2}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <svg width="8" height="8" viewBox="0 0 24 24" fill={ON} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
           </div>
           <div>
-            <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH}}>{user.name}</h2>
+            <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH}}>{user.name}</h2>
             <p style={{fontSize:12,color:MU,marginTop:2}}>{t.since} Mart 2024</p>
             <span className="pill pill-gold" style={{marginTop:5,display:"inline-flex"}}>
               <svg width="9" height="9" viewBox="0 0 24 24" fill={G} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{t.gold}
@@ -773,7 +773,7 @@ function ProfileScreen(){
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
           {[{l:t.wsLabel,v:"3"},{l:t.evLabel,v:"11"},{l:"Tracks",v:"24"}].map(s=>(
             <div key={s.l} style={{background:ON,border:".5px solid #23252E",borderRadius:9,padding:"11px 8px",textAlign:"center"}}>
-              <div style={{fontSize:20,fontWeight:600,color:G,fontFamily:"'Bodoni Moda',serif"}}>{s.v}</div>
+              <div style={{fontSize:20,fontWeight:600,color:G,fontFamily:"'Archivo',serif"}}>{s.v}</div>
               <div style={{fontSize:9,color:MU,marginTop:3,letterSpacing:".06em",textTransform:"uppercase"}}>{s.l}</div>
             </div>
           ))}
@@ -798,7 +798,7 @@ function ProfileScreen(){
         </div>
         {[{l:t.edit},{l:t.bookHist},{l:t.notif},
           {l:lang==="tr"?"Hakkımızda":"About",act:()=>setShowAbout(true)},
-          {l:t.lang,extra:<div style={{display:"flex",gap:5}}>{["tr","en"].map(ll=><button key={ll} onClick={()=>setLang(ll)} style={{padding:"3px 9px",borderRadius:5,border:`.5px solid ${lang===ll?GD:"#33363F"}`,color:lang===ll?G:MU,background:lang===ll?`${G}12`:"transparent",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{ll.toUpperCase()}</button>)}</div>},
+          {l:t.lang,extra:<div style={{display:"flex",gap:5}}>{["tr","en"].map(ll=><button key={ll} onClick={()=>setLang(ll)} style={{padding:"3px 9px",borderRadius:5,border:`.5px solid ${lang===ll?GD:"#33363F"}`,color:lang===ll?G:MU,background:lang===ll?`${G}12`:"transparent",fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{ll.toUpperCase()}</button>)}</div>},
           {l:t.signOut,danger:true,act:()=>db.auth.signOut()}
         ].map(item=>(
           <div key={item.l} onClick={item.act} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"15px 0",borderBottom:".5px solid #181A22",cursor:item.act?"pointer":"default"}}>
@@ -811,7 +811,7 @@ function ProfileScreen(){
         <div className="modal-bg" onClick={()=>setShowAbout(false)}>
           <div className="modal-sheet" onClick={e=>e.stopPropagation()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH}}>{lang==="tr"?"Hakkımızda":"About"}</h2>
+              <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH}}>{lang==="tr"?"Hakkımızda":"About"}</h2>
               <button className="touch-btn" onClick={()=>setShowAbout(false)} style={{fontSize:20,color:MU,background:"none",border:"none",cursor:"pointer"}}>×</button>
             </div>
             <p style={{fontSize:13,color:"#9CA0AD",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{content.about}</p>
@@ -855,7 +855,7 @@ function ContentAdmin(){
     audio:[["kind",L("Tür","Type"),"select",true,[["main",L("Ana Gösterim · Immersive","Main Show · Immersive")],["exhibition",L("Sergi Anlatımı · hatch dijital art","Exhibition Narration")]]],["title",L("Ses başlığı","Audio title"),"text",true],["artist",L("Sanatçı / alt başlık — opsiyonel","Artist / subtitle — optional"),"text",false],["desc",L("Açıklama — opsiyonel","Description — optional"),"area",false],["img",L("Kapak görseli — opsiyonel","Cover image — optional"),"image",false],["src",L("Ses dosyası","Audio file"),"audiofile",true],["chapters",L("Bölümler","Chapters"),"chapters",false]],
   };
   const lbl={fontSize:10,color:MU,letterSpacing:".06em",textTransform:"uppercase",marginBottom:6,display:"block"};
-  const goldBtn={background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"};
+  const goldBtn={background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer"};
   const pickImg=file=>{
     if(!file)return;
     setUploading(true);setMsg("");
@@ -906,12 +906,12 @@ function ContentAdmin(){
   return(
     <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        {types.map(ty=><button key={ty.id} onClick={()=>{setCtype(ty.id);resetForm();setMsg("");}} style={{padding:"6px 12px",borderRadius:7,fontSize:10,fontWeight:500,fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${ctype===ty.id?GD:"#23252E"}`,color:ctype===ty.id?G:MU,background:ctype===ty.id?`${G}12`:ON2,cursor:"pointer"}}>{ty.label}</button>)}
+        {types.map(ty=><button key={ty.id} onClick={()=>{setCtype(ty.id);resetForm();setMsg("");}} style={{padding:"6px 12px",borderRadius:7,fontSize:10,fontWeight:500,fontFamily:"'Inter',sans-serif",border:`.5px solid ${ctype===ty.id?GD:"#23252E"}`,color:ctype===ty.id?G:MU,background:ctype===ty.id?`${G}12`:ON2,cursor:"pointer"}}>{ty.label}</button>)}
       </div>
       {ctype==="about"?(
         <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
           <label style={lbl}>{L("Hakkımızda metni","About text")}</label>
-          <textarea value={aboutTxt} onChange={e=>setAboutTxt(e.target.value)} rows={6} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6}}/>
+          <textarea value={aboutTxt} onChange={e=>setAboutTxt(e.target.value)} rows={6} className="inp" style={{resize:"vertical",fontFamily:"'Inter',sans-serif",lineHeight:1.6}}/>
           <button onClick={async()=>{setMsg(L("Kaydediliyor…","Saving…"));try{await updateAbout(aboutTxt);setMsg(L("✓ Kaydedildi","✓ Saved"));setTimeout(()=>setMsg(""),2500);}catch(e){setMsg(L("Kaydedilemedi: ","Save failed: ")+(e.message||""));}}} style={goldBtn}>{L("Kaydet","Save")}</button>
         </div>
       ):(<>
@@ -926,10 +926,10 @@ function ContentAdmin(){
                   <span style={{fontSize:13,color:WH}}>{label}</span>
                 </label>
                 :type==="area"
-                ?<textarea value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} rows={3} className="inp" style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}/>
+                ?<textarea value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} rows={3} className="inp" style={{resize:"vertical",fontFamily:"'Inter',sans-serif",lineHeight:1.5}}/>
                 :type==="select"
                 ?<div style={{display:"flex",flexDirection:"column",gap:6}}>
-                  {opts.map(([ov,ol])=><button key={ov} type="button" onClick={()=>setForm(f=>({...f,[k]:ov}))} style={{padding:"10px 12px",borderRadius:8,fontSize:11,fontFamily:"'DM Sans',sans-serif",textAlign:"left",border:`.5px solid ${form[k]===ov?GD:"#33363F"}`,background:form[k]===ov?`${G}14`:ON,color:form[k]===ov?G:MU,cursor:"pointer"}}>{ol}</button>)}
+                  {opts.map(([ov,ol])=><button key={ov} type="button" onClick={()=>setForm(f=>({...f,[k]:ov}))} style={{padding:"10px 12px",borderRadius:8,fontSize:11,fontFamily:"'Inter',sans-serif",textAlign:"left",border:`.5px solid ${form[k]===ov?GD:"#33363F"}`,background:form[k]===ov?`${G}14`:ON,color:form[k]===ov?G:MU,cursor:"pointer"}}>{ol}</button>)}
                 </div>
                 :type==="chapters"
                 ?<div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -940,7 +940,7 @@ function ContentAdmin(){
                       <button type="button" onClick={()=>setForm(f=>({...f,chapters:(f.chapters||[]).filter((_,x)=>x!==ci)}))} style={{width:34,minWidth:34,borderRadius:8,border:".5px solid #33363F",background:ON,color:"#E07070",fontSize:15,cursor:"pointer"}}>×</button>
                     </div>
                   ))}
-                  <button type="button" onClick={()=>setForm(f=>({...f,chapters:[...(f.chapters||[]),{title:"",time:""}]}))} style={{padding:"9px",borderRadius:8,border:".5px dashed #33363F",background:"transparent",color:G,fontSize:11,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>+ {L("Bölüm ekle","Add chapter")}</button>
+                  <button type="button" onClick={()=>setForm(f=>({...f,chapters:[...(f.chapters||[]),{title:"",time:""}]}))} style={{padding:"9px",borderRadius:8,border:".5px dashed #33363F",background:"transparent",color:G,fontSize:11,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>+ {L("Bölüm ekle","Add chapter")}</button>
                 </div>
                 :type==="sessions"
                 ?<div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -951,7 +951,7 @@ function ContentAdmin(){
                       <button type="button" onClick={()=>setForm(f=>({...f,sessions:(f.sessions||[]).filter((_,x)=>x!==si)}))} style={{width:34,minWidth:34,borderRadius:8,border:".5px solid #33363F",background:ON,color:"#E07070",fontSize:15,cursor:"pointer"}}>×</button>
                     </div>
                   ))}
-                  <button type="button" onClick={()=>setForm(f=>({...f,sessions:[...(f.sessions||[]),""]}))} style={{padding:"9px",borderRadius:8,border:".5px dashed #33363F",background:"transparent",color:G,fontSize:11,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>+ {L("Seans ekle","Add session")}</button>
+                  <button type="button" onClick={()=>setForm(f=>({...f,sessions:[...(f.sessions||[]),""]}))} style={{padding:"9px",borderRadius:8,border:".5px dashed #33363F",background:"transparent",color:G,fontSize:11,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>+ {L("Seans ekle","Add session")}</button>
                 </div>
                 :type==="image"
                 ?<div>
@@ -986,8 +986,8 @@ function ContentAdmin(){
                 <p style={{fontSize:13,color:editId===it.id?GL:WH,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.title||it.name||L("(başlıksız)","(untitled)")}</p>
                 <p style={{fontSize:10,color:MU,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{[it.status==="live"?L("Yayında","Live"):it.status==="soon"?L("Çok Yakında","Soon"):null,it.startDate?fmtRange(it,lang):(it.date?fmtD(it.date,lang).full:null),fmtSessions(it),it.price].filter(Boolean).join(" · ")}</p>
               </div>
-              <button onClick={()=>startEdit(it)} style={{padding:"6px 10px",borderRadius:7,border:`.5px solid ${GD}`,background:"transparent",color:G,fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Düzenle","Edit")}</button>
-              <button onClick={()=>removeItem(it)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
+              <button onClick={()=>startEdit(it)} style={{padding:"6px 10px",borderRadius:7,border:`.5px solid ${GD}`,background:"transparent",color:G,fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{L("Düzenle","Edit")}</button>
+              <button onClick={()=>removeItem(it)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
             </div>
           ))}
         </div>}
@@ -1015,8 +1015,8 @@ function NotifAdmin(){
     <div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:14}}>
       <div className="card" style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
         <div><label style={lbl}>{L("Başlık","Title")}</label><input className="inp" value={title} onChange={e=>setTitle(e.target.value)} placeholder={L("örn. Yeni sergi açıldı","e.g. New exhibition is live")}/></div>
-        <div><label style={lbl}>{L("Mesaj","Message")}</label><textarea className="inp" rows={3} value={body} onChange={e=>setBody(e.target.value)} style={{resize:"vertical",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}/></div>
-        <button onClick={send} disabled={busy} style={{background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:busy?.6:1}}>{busy?L("Gönderiliyor…","Sending…"):L("Duyuru Gönder","Send Notification")}</button>
+        <div><label style={lbl}>{L("Mesaj","Message")}</label><textarea className="inp" rows={3} value={body} onChange={e=>setBody(e.target.value)} style={{resize:"vertical",fontFamily:"'Inter',sans-serif",lineHeight:1.5}}/></div>
+        <button onClick={send} disabled={busy} style={{background:G,border:"none",color:ON,padding:"11px",borderRadius:9,fontSize:12,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer",opacity:busy?.6:1}}>{busy?L("Gönderiliyor…","Sending…"):L("Duyuru Gönder","Send Notification")}</button>
       </div>
       {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#8BB87A":"#E07070",textAlign:"center"}}>{msg}</p>}
       {notifs.length>0&&<div className="card" style={{padding:"6px 0"}}>
@@ -1027,7 +1027,7 @@ function NotifAdmin(){
               <p style={{fontSize:13,color:WH,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.title}</p>
               {n.body&&<p style={{fontSize:11,color:MU,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.body}</p>}
             </div>
-            <button onClick={()=>remove(n)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
+            <button onClick={()=>remove(n)} style={{padding:"6px 10px",borderRadius:7,border:".5px solid #5A2A2A",background:"transparent",color:"#E07070",fontSize:10,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{L("Sil","Delete")}</button>
           </div>
         ))}
       </div>}
@@ -1058,14 +1058,14 @@ function AdminPanel(){
         <Logo size={32}/>
       </div>
       <div style={{display:"flex",padding:"14px 20px",gap:6}}>
-        {["stats","users","activity","events","content","notif"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
+        {["stats","users","activity","events","content","notif"].map(tb=><button key={tb} onClick={()=>setTab(tb)} style={{padding:"7px 14px",borderRadius:7,fontSize:10,fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"'Inter',sans-serif",border:`.5px solid ${tab===tb?GD:"#23252E"}`,color:tab===tb?G:MU,background:tab===tb?`${G}12`:ON2,cursor:"pointer"}}>
           {tb==="stats"?t.adminStats:tb==="users"?t.adminUsers:tb==="activity"?(lang==="tr"?"Aktivite":"Activity"):tb==="events"?t.adminEvents:tb==="content"?(lang==="tr"?"İçerik Ekle":"Add Content"):(lang==="tr"?"Duyuru":"Notify")}
         </button>)}
       </div>
       {tab==="stats"&&<div style={{padding:"0 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         {stats.map(s=><div key={s.l} className="card" style={{padding:"16px"}}>
           <p style={{fontSize:9,color:MU,letterSpacing:".1em",textTransform:"uppercase",marginBottom:7}}>{s.l}</p>
-          <p style={{fontSize:24,fontWeight:600,color:WH,fontFamily:"'Bodoni Moda',serif"}}>{s.v}</p>
+          <p style={{fontSize:24,fontWeight:600,color:WH,fontFamily:"'Archivo',serif"}}>{s.v}</p>
           {s.ch&&<p style={{fontSize:11,color:"#8BB87A",marginTop:3}}>{s.ch} bu ay</p>}
         </div>)}
       </div>}
@@ -1100,7 +1100,7 @@ function AdminPanel(){
           {activity.length>0&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {Object.entries(counts).map(([k,v])=><div key={k} className="card" style={{padding:"14px 16px"}}>
               <p style={{fontSize:9,color:MU,letterSpacing:".1em",textTransform:"uppercase",marginBottom:6}}>{lbl[k]||k}</p>
-              <p style={{fontSize:22,fontWeight:600,color:WH,fontFamily:"'Bodoni Moda',serif"}}>{v}</p>
+              <p style={{fontSize:22,fontWeight:600,color:WH,fontFamily:"'Archivo',serif"}}>{v}</p>
             </div>)}
           </div>}
           {activity.length>0&&<p className="sec-title">{lang==="tr"?"Son Aktiviteler":"Recent Activity"} ({activity.length})</p>}
@@ -1172,14 +1172,14 @@ function DetailPage({type,item,onClose}){
   }
   return(
     <div style={{position:"absolute",inset:0,background:ON,zIndex:300,overflowY:"auto"}}>
-      <div style={{position:"relative",height:280,background:item.img?"#000":"linear-gradient(160deg,#083344,#155E75 50%,#0A0B10)"}}>
+      <div style={{position:"relative",height:280,background:item.img?"#000":"linear-gradient(160deg,#0d1030,#1649D8 50%,#0A0B10)"}}>
         {item.img&&<img src={item.img} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
         <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 55%,rgba(0,0,0,.92))"}}/>
         <button onClick={onClose} style={{position:"absolute",top:48,left:16,width:38,height:38,borderRadius:"50%",background:"rgba(0,0,0,.55)",border:".5px solid #33363F",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={WH} strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         {item.tag&&<span className="pill pill-gold" style={{position:"absolute",bottom:56,left:20}}>{item.tag}</span>}
-        <h1 style={{position:"absolute",bottom:18,left:20,right:20,fontFamily:"'Bodoni Moda',serif",fontSize:24,fontWeight:500,color:WH,lineHeight:1.2}}>{title}</h1>
+        <h1 style={{position:"absolute",bottom:18,left:20,right:20,fontFamily:"'Archivo',serif",fontSize:24,fontWeight:500,color:WH,lineHeight:1.2}}>{title}</h1>
       </div>
       <div style={{padding:"18px 20px 110px"}}>
         <div style={{marginBottom:item.desc?20:8}}>
@@ -1195,7 +1195,7 @@ function DetailPage({type,item,onClose}){
           <p style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GL,fontWeight:500,marginBottom:8}}>Credits</p>
           <p style={{fontSize:12,color:"#9CA0AD",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{item.credits}</p>
         </div>}
-        {type!=="exhibitions"&&<button onClick={()=>{if(type!=="products"&&item.ticketUrl)window.open(item.ticketUrl,"_blank");}} style={{width:"100%",background:G,border:"none",color:ON,padding:"14px",borderRadius:11,fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>{type==="products"?t.add:t.bookNow}</button>}
+        {type!=="exhibitions"&&<button onClick={()=>{if(type!=="products"&&item.ticketUrl)window.open(item.ticketUrl,"_blank");}} style={{width:"100%",background:G,border:"none",color:ON,padding:"14px",borderRadius:11,fontSize:13,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>{type==="products"?t.add:t.bookNow}</button>}
       </div>
     </div>
   );
@@ -1220,14 +1220,14 @@ function NewPasswordModal({onClose}){
     <div className="modal-bg">
       <div className="modal-sheet">
         <div style={{width:36,height:3,background:"#33363F",borderRadius:2,margin:"0 auto 20px"}}/>
-        <h2 style={{fontFamily:"'Bodoni Moda',serif",fontSize:20,fontWeight:500,color:WH,textAlign:"center",marginBottom:6}}>{L("Yeni Şifre","New Password")}</h2>
+        <h2 style={{fontFamily:"'Archivo',serif",fontSize:20,fontWeight:500,color:WH,textAlign:"center",marginBottom:6}}>{L("Yeni Şifre","New Password")}</h2>
         <p style={{fontSize:12,color:MU,textAlign:"center",marginBottom:18}}>{L("Yeni şifreni belirle.","Set your new password.")}</p>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           <input className="inp" type="password" placeholder={L("Yeni şifre","New password")} value={pass} onChange={e=>setPass(e.target.value)}/>
           <input className="inp" type="password" placeholder={L("Yeni şifre (tekrar)","New password (again)")} value={pass2} onChange={e=>setPass2(e.target.value)}/>
         </div>
         {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"#86EFAC":"#E07070",textAlign:"center",marginTop:14}}>{msg}</p>}
-        <button onClick={submit} disabled={busy} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:G,border:"none",color:ON,fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:busy?.6:1}}>{busy?"…":L("Şifreyi Güncelle","Update Password")}</button>
+        <button onClick={submit} disabled={busy} style={{width:"100%",marginTop:16,padding:"13px",borderRadius:10,background:G,border:"none",color:ON,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif",cursor:"pointer",opacity:busy?.6:1}}>{busy?"…":L("Şifreyi Güncelle","Update Password")}</button>
       </div>
     </div>
   );
